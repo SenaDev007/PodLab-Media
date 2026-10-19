@@ -23,3 +23,22 @@ Stage Summary:
 - Fichiers clés créés : flag.tsx, pdf-server.ts, download.ts, episode-highlights.ts, invitation-data.ts, logo-base64.ts, invitation-view.tsx, app/invitation/page.tsx, api/pdf/*, api/invitations, scripts/prepare-logo.mjs.
 - BDD : modèle InvitationBooking ajouté (SQLite pushé, client Prisma régénéré).
 - État : dev server vert, tous les tests passent, prêt pour commit + push GitHub.
+
+---
+Task ID: 2
+Agent: Z.ai (agent principal)
+Task: Générer une image de fond professionnelle liée au projet et l'intégrer dans le hero section du landing page
+
+Work Log:
+- Image générée par IA (z-ai-web-dev-sdk, scripts/generate-hero-bg.mjs, 2048x1024) : photographie cinématique noir & blanc d'un studio podcast premium — deux dirigeants africains en costume, micros broadcast sur bras articulés, panneaux acoustiques, éclairage LED doux en bokeh, tons charbon très sombres.
+- Contrôle qualité VLM sur l'image brute : verdict UTILISABLE (monochrome parfait, tons sombres adaptés au texte blanc, scène studio crédible, artefacts mineurs négligeables).
+- Optimisation web (scripts/optimize-hero-bg.mjs, sharp) : WebP 2048px 122 Ko (desktop) + WebP 1280px 58 Ko (mobile, q72). Master PNG archivé hors public/ dans assets-src/hero-studio-bg.png.
+- Intégration hero.tsx : couche <picture> (source mobile <768px), img object-cover fetchPriority="high", fondu d'entrée 1,1 s, animation Ken Burns lente (scale 1→1,05, 30 s, boucle infinie) désactivée si prefers-reduced-motion (useReducedMotion).
+- Overlays : dégradé vertical from-black/90 → via-black/50 → to-black (lisibilité + fondu vers le noir pur en haut/bas), vignette radiale cinématique (bords assombris, centre respirable), grille technique + halo conservés par-dessus (identité PodLab inchangée).
+- QA navigateur : tsc --noEmit OK, ESLint 0 avertissement, page 200. Captures desktop 1600px + mobile 390px contrôlées par VLM : verdicts INTÉGRATION RÉUSSIE (desktop) et MOBILE OK (mobile) — titre blanc lisible, image visible sans casser le monochrome strict, boutons et lecteur vidéo superposés proprement, aucun chevauchement ni bord dur.
+
+Stage Summary:
+- Hero du landing page transformé : fond grille nue → photographie de studio podcast monochrome cinématique avec overlays premium, animation Ken Burns accessible (reduced-motion respecté).
+- Assets : public/hero-studio-bg.webp (122 Ko) + public/hero-studio-bg-mobile.webp (58 Ko) ; master PNG dans assets-src/.
+- Scripts persistés : scripts/generate-hero-bg.mjs, scripts/optimize-hero-bg.mjs (réutilisables pour régénérer/optimiser).
+- État : dev server vert, prêt pour commit + push GitHub.

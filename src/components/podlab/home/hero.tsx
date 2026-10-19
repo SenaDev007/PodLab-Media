@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { Play, CalendarCheck, UserRoundPlus, Mic, Building2, Ear } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CountUp } from "@/components/podlab/shared";
@@ -32,11 +32,59 @@ const IMPACT_NUMBERS = [
 
 export function Hero() {
   const [playing, setPlaying] = useState(false);
+  const reduceMotion = useReducedMotion();
   const ep = FEATURED_VIDEO;
 
   return (
     <section className="relative overflow-hidden">
-      {/* Fond : grille technique + halo */}
+      {/* Fond : photographie du studio PodLab (monochrome cinématique) */}
+      <div className="absolute inset-0" aria-hidden>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1.1, ease: "easeOut" }}
+          className="h-full w-full"
+        >
+          <motion.div
+            animate={reduceMotion ? undefined : { scale: [1, 1.05, 1] }}
+            transition={{
+              duration: 30,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+            className="h-full w-full will-change-transform"
+          >
+            <picture>
+              <source
+                srcSet="/hero-studio-bg-mobile.webp"
+                media="(max-width: 767px)"
+                type="image/webp"
+              />
+              <img
+                src="/hero-studio-bg.webp"
+                alt=""
+                loading="eager"
+                fetchPriority="high"
+                decoding="async"
+                className="h-full w-full object-cover"
+              />
+            </picture>
+          </motion.div>
+        </motion.div>
+      </div>
+
+      {/* Voile dégradé : lisibilité du texte + fondu vers le noir pur */}
+      <div
+        className="absolute inset-0 bg-gradient-to-b from-black/90 via-black/50 to-black"
+        aria-hidden
+      />
+      {/* Vignette cinématique — assombrit les bords, garde le centre respirable */}
+      <div
+        className="absolute inset-0 bg-[radial-gradient(ellipse_90%_70%_at_50%_42%,transparent_30%,rgba(0,0,0,0.75)_100%)]"
+        aria-hidden
+      />
+
+      {/* Grille technique + halo — identité visuelle PodLab */}
       <div className="absolute inset-0 bg-grid" aria-hidden />
       <div
         className="absolute inset-x-0 top-0 h-[480px] glow-top"

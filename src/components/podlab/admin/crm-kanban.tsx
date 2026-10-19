@@ -17,11 +17,12 @@ import { toast } from "@/hooks/use-toast";
 import type { Lead, LeadStatus } from "@/types/podlab";
 import { cn } from "@/lib/utils";
 
-const STATUSES: LeadStatus[] = ["nouveau", "kit_envoye", "rdv_cale", "signe"];
+const STATUSES: LeadStatus[] = ["nouveau", "kit_envoye", "rdv_cale", "devis", "signe"];
 const STATUS_HINTS: Record<LeadStatus, string> = {
   nouveau: "Demandes entrantes",
   kit_envoye: "Kit Média PDF transmis",
   rdv_cale: "Rendez-vous planifiés",
+  devis: "Propositions commerciales en revue",
   signe: "Contrats signés",
 };
 
@@ -110,6 +111,7 @@ export function CrmKanban({ onChanged }: { onChanged?: () => void }) {
       nouveau: [],
       kit_envoye: [],
       rdv_cale: [],
+      devis: [],
       signe: [],
     };
     for (const l of visible) map[l.status]?.push(l);
@@ -145,8 +147,8 @@ export function CrmKanban({ onChanged }: { onChanged?: () => void }) {
       </div>
 
       {loading ? (
-        <div className="grid gap-4 lg:grid-cols-4">
-          {[1, 2, 3, 4].map((i) => (
+        <div className="grid gap-4 lg:grid-cols-5">
+          {[1, 2, 3, 4, 5].map((i) => (
             <div
               key={i}
               className="h-64 animate-pulse rounded-2xl border border-white/5 bg-zinc-950/60"
@@ -154,7 +156,7 @@ export function CrmKanban({ onChanged }: { onChanged?: () => void }) {
           ))}
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           {STATUSES.map((status) => {
             const items = byStatus[status];
             const nextIdx = STATUSES.indexOf(status) + 1;

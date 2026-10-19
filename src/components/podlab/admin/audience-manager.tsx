@@ -19,9 +19,11 @@ import { cn } from "@/lib/utils";
 
 const SEGMENTS: Array<{ id: string; label: string }> = [
   { id: "all", label: "Tous" },
-  { id: "finance", label: "Finance" },
+  { id: "entrepreneuriat", label: "Entrepreneuriat & Business" },
+  { id: "finance", label: "Finance & Investissement" },
   { id: "success-stories", label: "Success Stories" },
-  { id: "strategie", label: "Stratégie" },
+  { id: "showbiz", label: "Musique & Showbiz" },
+  { id: "societe", label: "Société & Révélations" },
   { id: "general", label: "Général" },
 ];
 
@@ -79,7 +81,7 @@ export function AudienceManager({ onChanged }: { onChanged?: () => void }) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-lg font-bold text-white">
-            Base audience — PodLab Business Brief
+            Base audience — Cercle Privé PodLab
           </h2>
           <p className="mt-1 text-xs text-zinc-500">
             {subscribers.length} abonnés · segmentation par centres

@@ -139,29 +139,59 @@ lecture seule** : SQLite (fichier) ne peut pas y persister. L'application
 ## ✨ Fonctionnalités
 
 ### Front-office
-- **Hero** avec lecteur YouTube clic-to-play (épisode vedette réel), compteurs
-  animés (128 K abonnés, 18,3 M vues, 894 vidéos, 14 pays)
+- **Hero** — copywriting officiel : kicker « Le 1ᵉʳ Média Business d'Afrique
+  Francophone », H1 « L'Écosystème où s'écrit le futur du Business en Afrique. »,
+  double CTA « Rejoindre le Cercle Privé — Gratuit » / « Réserver un Studio », lecteur
+  YouTube clic-to-play (épisode vedette réel « Discussion Informelle »)
+- **Barre de preuve sociale** (copywriting §2.2) : 1M+ d'écoutes/trimestre
+  (podcast business n°1 au Bénin, n°2 en Afrique de l'Ouest) · +128 000 décideurs ·
+  2 studios internationaux 4K Broadcast
+- **Manifeste « Pourquoi YouTube ne suffit plus »** (copywriting §2.3) : citation
+  éditoriale + paragraphe institutionnel
 - **Catalogue réel** : 75 épisodes, filtres par thématique (Entrepreneuriat,
   Finance, Success Stories, Showbiz, Société), recherche, chargement progressif
+- **Fiches d'épisodes SEO** : 75 pages statiques `/episodes/[id]` générées au build
+  (cahier des charges §3.1 — synopsis, lecteur enrichi, JSON-LD VideoObject,
+  épisodes liés) + `sitemap.xml` automatique
+- **Lecteur flottant** (design system §3 — 21st.dev) : barre flottante avec mini
+  lecteur, waveform animée en blanc pur, fiche PDF et lien YouTube — écoute en
+  continu tout en parcourant le catalogue
 - **Captation email** : fiche PDF d'épisode en échange de l'email (source
   `episode-pdf` dans la base audience)
-- **Réservation studio** : Cotonou/Abidjan → formule (audio 75 000, 4K 150 000,
-  clé en main 350 000 F CFA) → calendrier 14 jours avec créneaux occupés →
-  paiement Mobile Money/carte → confirmation
-- **Sponsoring B2B** : qualificateur budget (A < 500 K / B 500 K–1 M /
-  C > 1 M F CFA → **priorité haute automatique**), Kit Média PDF débloqué,
-  calculateur ROI (CPM PodLab vs TV)
+- **Réservation studio** : Cotonou/Abidjan → packs (Audio Master 75 000, Podcasting
+  Vidéo 4K 150 000, Production Exécutive Clé en Main 350 000 F CFA) → calendrier
+  14 jours avec créneaux occupés → acompte Mobile Money (FedaPay : MTN, Moov,
+  Orange, Wave) ou carte (Paystack 3-D Secure) → confirmation
+- **Sponsoring B2B** — tunnel 3 étapes (copywriting §3.1) : budget (A < 500 K /
+  B 500 K–1 M / C +1 M F CFA « Sur-mesure » → **priorité haute automatique**) →
+  objectif ROI (Branding / Acquisition B2B / Lancement de produit) → coordonnées
+  + déblocage Kit Média 2026, calculateur ROI (CPM PodLab vs TV), 3 avantages
+  annonceurs, rareté des créneaux
 - **Événements** : billetterie masterclasses / enregistrements publics
-- **Newsletter** « PodLab Business Brief »
+- **Newsletter « Le Cercle Privé PodLab »** (copywriting §5) : « L'Envers du
+  Décor Business », chaque dimanche 8h, lead magnet Fiche de Synthèse Décideur
+  (épisodes Stan Zézé & Richard Odjrado — grilles BRVM & ratios de gestion)
 
 ### Back-office (`/admin`)
 - 4 KPI temps réel (abonnés, leads HOT, CA studios, CA billets)
-- **CRM Kanban** : Nouveau → Kit Média Envoyé → RDV Calé → Signé (drag & drop,
-  marquage priorité, filtre HOT)
+- **CRM Kanban 5 étapes** (cahier des charges §4) : Nouveau Lead → Kit Média
+  Envoyé → RDV Calé → **Devis** → Signé (drag & drop, marquage priorité, filtre HOT)
 - **CMS épisodes** : catalogue réel + ajout brouillon (transcription SEO),
   publier / dépublier / supprimer
 - **Planning studios** : réservations filtrables Cotonou / Abidjan
-- **Base audience** : recherche, segments, sources, export CSV (BOM Excel)
+- **Base audience** : recherche, segments (5 thématiques réelles), sources,
+  export CSV (BOM Excel)
+
+## 🔌 Intégrations production (prochaines étapes)
+
+L'application simule aujourd'hui les étapes suivantes ; les textes et flux sont
+prêts à recevoir les intégrations réelles :
+
+| Module | État actuel | Montée en production |
+| --- | --- | --- |
+| Paiement studios & billets | Simulation acompte (FedaPay/Paystack mentionnés) | Créer un compte FedaPay & Paystack, brancher leurs APIs dans `/api/bookings` et `/api/tickets` |
+| E-mailing (Cercle Privé + relances B2B) | Captation en base + PDF client-side | Brancher Brevo/HubSpot — les séquences rédactionnelles sont prêtes dans `copywriting_podlab_complet.docx` §6 (e-mail de bienvenue + relance partenariat 24h) |
+| SEO domaine | `NEXT_PUBLIC_SITE_URL` (sitemap, défaut vercel.app) | Définir la variable avec le domaine final dans Vercel → Settings → Environment Variables |
 
 ## 📄 Licence
 

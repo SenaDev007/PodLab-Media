@@ -21,7 +21,7 @@ export const STUDIOS: Studio[] = [
     address: "Fidjrossè Plage, Boulevard de la Marina",
     capacity: "3 invités + équipe technique",
     features: [
-      "Set podcast 4K 3 caméras",
+      "Plateau 4K Broadcast 3 caméras",
       "Cabine audio traitée acoustiquement",
       "Régie lumière & fond noir studio",
       "Fibre dédiée pour live streaming",
@@ -35,55 +35,56 @@ export const STUDIOS: Studio[] = [
     address: "Cocody Riviera Golf, Rue des Jardins",
     capacity: "4 invités + équipe technique",
     features: [
-      "Plateau vidéo 120 m² double fond",
+      "Plateau 4K Broadcast 120 m² double fond",
       "Studio audio double cabine",
-      "Lounges d'accueil invités VIP",
-      "Station de montage sur place",
+      "Traitement acoustique professionnel",
+      "Régie complète + station de montage",
     ],
   },
 ];
 
+// Packs studios — copywriting officiel (charte copywriting_podlab_complet.docx §4)
 export const STUDIO_FORMULAS: StudioFormula[] = [
   {
     id: "audio",
-    name: "Enregistrement Audio Pur",
+    name: "Pack Audio Master",
     description:
-      "Studio audio professionnel avec ingénieur du son dédié. Idéal pour podcasts audio et captations voix.",
+      "Idéal pour les émissions de radio, livres audio et voix off. Isolation phonique studio, microphones Shure SM7B, ingénieur du son dédié.",
     price: 75_000,
     duration: "3 heures",
     features: [
-      "Cabine traitée acoustiquement",
-      "Ingénieur du son inclus",
-      "Micros à condensateur pro",
+      "Isolation phonique studio",
+      "Microphones Shure SM7B",
+      "Ingénieur du son dédié",
       "Fichiers WAV + MP3 livrés",
     ],
   },
   {
     id: "video4k",
-    name: "Pack Vidéo Podcast 4K",
+    name: "Pack Podcasting Vidéo 4K",
     description:
-      "Captation vidéo multi-caméras 4K avec éclairage studio et set premium PodLab.",
+      "Configuration multi-caméras (3 angles), éclairage cinématique, décor modulable premium, enregistrement live multi-pistes.",
     price: 150_000,
     duration: "3 heures",
     features: [
-      "3 caméras 4K + switch live",
-      "Éclairage 3 points",
-      "Micros-cravates sans fil",
-      "Rushs bruts livrés sous 48h",
+      "3 caméras 4K · 3 angles",
+      "Éclairage cinématique",
+      "Décor modulable premium",
+      "Enregistrement live multi-pistes",
     ],
   },
   {
     id: "cle-en-main",
-    name: "Clé en Main (Tournage + Montage)",
+    name: "Pack Production Exécutive Clé en Main",
     description:
-      "De la captation à la publication : tournage, montage, habillage graphique et déclinaisons Shorts/Reels.",
+      "De l'idée au montage final. Inclus : tournage, habillage sonore, découpe des extraits Shorts/Reels et sous-titrage.",
     price: 350_000,
     duration: "Journée complète",
     features: [
-      "Tout le Pack Vidéo 4K",
-      "Montage professionnel",
-      "Intro/outro & sous-titres",
-      "3 Shorts verticaux inclus",
+      "Tout le Pack Podcasting Vidéo 4K",
+      "Habillage sonore + montage final",
+      "Découpe Shorts / Reels incluse",
+      "Sous-titrage complet",
     ],
   },
 ];
@@ -153,16 +154,17 @@ export const BUDGET_OPTIONS = [
   },
   {
     id: "C" as const,
-    label: "Option C — Partenaire Premium",
-    range: "> 1 000 000 F CFA / mois",
-    description: "Title sponsor, épisodes dédiés, priorité commerciale haute.",
+    label: "Option C — Sur-mesure",
+    range: "+ 1 000 000 F CFA / mois",
+    description: "Title sponsor, épisodes dédiés, dispositif sur-mesure, priorité commerciale haute.",
   },
 ] as const;
 
 export const LEAD_STATUS_LABELS = {
-  nouveau: "Nouveau",
+  nouveau: "Nouveau Lead",
   kit_envoye: "Kit Média Envoyé",
   rdv_cale: "RDV Calé",
+  devis: "Devis",
   signe: "Signé",
 } as const;
 

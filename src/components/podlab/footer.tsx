@@ -33,9 +33,10 @@ export function Footer() {
           <div className="md:col-span-5">
             <PodLabLogo size="md" />
             <p className="mt-4 text-sm leading-relaxed text-zinc-400 max-w-sm">
-              Le 1er Média Business d&apos;Afrique francophone. Interviews
-              business, finance et success stories — décryptées chaque
-              semaine depuis nos studios de Cotonou et d&apos;Abidjan.
+              Le 1er Média Business d&apos;Afrique francophone. L&apos;émission
+              « Discussion Informelle » et ses interviews business — sans
+              filtre, chaque dimanche, depuis nos studios de Cotonou et
+              d&apos;Abidjan.
             </p>
             <div className="mt-5 flex items-center gap-3">
               {SOCIAL_LINKS.map(({ href, label, Icon }) => (

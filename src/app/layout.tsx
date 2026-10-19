@@ -14,12 +14,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PodLab Media — 1er Média Business d'Afrique francophone",
+  title: "PodLab Media — 1er Média Business d'Afrique Francophone",
   description:
-    "PodLab Media : 128 000 abonnés YouTube, 18,2 M de vues cumulées, 894 vidéos. Interviews business, finance, success stories et showbiz — studios 4K à Cotonou et Abidjan. Sponsoring B2B, masterclasses et réservation de studios en ligne.",
+    "L'Écosystème où s'écrit le futur du Business en Afrique. Chaque dimanche, les conversations confidentielles avec les bâtisseurs, dirigeants et investisseurs qui façonnent l'économie régionale. 128 000 décideurs · 1 million d'écoutes par trimestre · Studios 4K Cotonou & Abidjan · Sponsoring B2B · Discussion Informelle.",
   keywords: [
     "PodLab Media",
     "PodLab",
+    "Discussion Informelle",
     "podcast business Afrique",
     "success stories entrepreneurs",
     "interviews Afrique francophone",
@@ -28,12 +29,14 @@ export const metadata: Metadata = {
     "sponsoring B2B Afrique",
     "BRVM",
     "finance Afrique francophone",
+    "Stan Zézé",
+    "Richard Odjrado",
   ],
   authors: [{ name: "PodLab Media" }],
   openGraph: {
-    title: "PodLab Media — 1er Média Business d'Afrique francophone",
+    title: "PodLab Media — L'Écosystème où s'écrit le futur du Business en Afrique",
     description:
-      "128 000 abonnés YouTube · 18,2 M de vues cumulées · Studios Cotonou & Abidjan.",
+      "128 000 décideurs · 1 million d'écoutes par trimestre · Studios 4K Broadcast Cotonou & Abidjan.",
     siteName: "PodLab Media",
     type: "website",
     locale: "fr_FR",

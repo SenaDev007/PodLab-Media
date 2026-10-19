@@ -158,13 +158,15 @@ export function StudiosView() {
       <div className="absolute inset-x-0 top-0 h-80 glow-top" aria-hidden />
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6">
         <Reveal>
-          <SectionTag index="S" label="Portail de réservation" />
-          <h1 className="mt-4 text-4xl md:text-6xl font-bold tracking-tight text-gradient">
-            Réservez votre studio.
+          <SectionTag index="S" label="Réservation Studios — Cotonou &amp; Abidjan" />
+          <h1 className="mt-4 max-w-3xl text-3xl md:text-5xl font-bold tracking-tight text-gradient">
+            Donnez à Vos Contenus le Standing des Plus Grands Médias
+            Internationaux.
           </h1>
-          <p className="mt-4 max-w-xl text-sm md:text-base leading-relaxed text-zinc-400">
-            Cotonou ou Abidjan, audio ou 4K : choisissez votre ville, votre
-            formule et votre créneau. Paiement Mobile Money ou carte bancaire.
+          <p className="mt-4 max-w-2xl text-sm md:text-base leading-relaxed text-zinc-400">
+            Louez nos plateaux de tournage équipés en 4K Broadcast, traitement
+            acoustique professionnel et régie complète à Cotonou (Bénin) et
+            Abidjan (Côte d&apos;Ivoire).
           </p>
         </Reveal>
 
@@ -434,8 +436,8 @@ export function StudiosView() {
                   </div>
                   <p className="mt-5 text-[11px] leading-relaxed text-zinc-500">
                     {paymentMethod === "mobile-money"
-                      ? "Vous recevrez une demande de paiement Mobile Money (MTN, Moov ou Wave) sur votre numéro."
-                      : "Paiement sécurisé 3-D Secure : Visa, Mastercard, GIM-UEMOA acceptés."}
+                      ? "Acompte de réservation sécurisé via FedaPay : MTN Mobile Money, Moov Money, Orange Money et Wave acceptés — vous recevrez une demande de paiement sur votre numéro."
+                      : "Acompte de réservation sécurisé via Paystack : paiement 3-D Secure — Visa, Mastercard et GIM-UEMOA acceptés."}
                   </p>
                 </div>
               )}
@@ -470,7 +472,7 @@ export function StudiosView() {
                       <span className="font-semibold text-white">{slot}</span>
                     </div>
                     <div className="mt-1 flex justify-between gap-2 border-t border-white/10 pt-3">
-                      <span className="text-zinc-500">Montant payé</span>
+                      <span className="text-zinc-500">Acompte versé</span>
                       <span className="font-bold text-white">{formatCFA(price)}</span>
                     </div>
                   </div>
@@ -502,7 +504,7 @@ export function StudiosView() {
                   ) : (
                     <Button disabled={loading} onClick={submit} className="gap-2 rounded-xl font-semibold">
                       {loading ? <Loader2 className="size-4 animate-spin" /> : null}
-                      Payer {formatCFA(price)}
+                      Payer l&apos;acompte — {formatCFA(price)}
                     </Button>
                   )}
                 </div>

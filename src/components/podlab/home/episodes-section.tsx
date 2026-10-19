@@ -2,21 +2,14 @@
 
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Download, Play, Loader2, CheckCircle2, FileText, Search, Youtube, Loader } from "lucide-react";
+import { Download, Play, Search, Youtube, Loader } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Reveal, SectionTag } from "@/components/podlab/shared";
+import { PdfCaptureDialog } from "@/components/podlab/player/floating-player";
 import { VIDEOS, VIDEO_THEMES } from "@/lib/videos";
-import { SOCIALS, CONTACT } from "@/lib/brand";
-import { downloadPdf } from "@/lib/pdf";
-import { toast } from "@/hooks/use-toast";
+import { SOCIALS } from "@/lib/brand";
+import { usePlayerStore } from "@/lib/player-store";
 import type { PodLabVideo, VideoTheme } from "@/types/podlab";
 import { cn } from "@/lib/utils";
 
@@ -33,188 +26,6 @@ const FILTERS: Array<{ id: Filter; label: string }> = [
 
 const PAGE_SIZE = 9;
 
-// Points de synthèse par thématique (fiche PDF de captation)
-const THEME_HIGHLIGHTS: Record<VideoTheme, string[]> = {
-  entrepreneursuriat: [
-    "Les décisions structurantes derrière la trajectoire de l'invité",
-    "Méthodes, modèles économiques et leviers de croissance applicables en zone CFA",
-    "Erreurs à éviter et conseils opérationnels pour entrepreneurs et dirigeants",
-  ],
-  finance: [
-    "Principes d'argent, d'épargne et d'investissement partagés par l'invité",
-    "Réflexes concrets pour bâtir son indépendance financière en Afrique",
-    "Pièges financiers courants et comment les contourner",
-  ],
-  "success-stories": [
-    "Le parcours complet : débuts, obstacles et points de bascule",
-    "Les leçons de résilience transposables à votre propre projet",
-    "Vision et prochaines étapes de l'invité",
-  ],
-  showbiz: [
-    "Les coulisses de la carrière : réalités du métier et rapports à l'argent",
-    "Gestion de la notoriété, des critiques et des trahisons",
-    "Conseils aux artistes et créateurs de contenu",
-  ],
-  societe: [
-    "Analyses et révélations sur les enjeux de société abordés",
-    "Éclairages inédits sur les personnalités et institutions évoquées",
-    "Regard contextualisé sur l'actualité béninoise et africaine",
-  ],
-};
-
-// ─── Modale de téléchargement du résumé PDF (captation email) ────────────────
-function PdfCaptureDialog({
-  video,
-  open,
-  onOpenChange,
-}: {
-  video: PodLabVideo | null;
-  open: boolean;
-  onOpenChange: (v: boolean) => void;
-}) {
-  const [email, setEmail] = useState("");
-  const [name, setName] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [done, setDone] = useState(false);
-
-  const submit = async () => {
-    if (!video || !email.includes("@")) {
-      toast({ title: "Email invalide", description: "Renseignez une adresse email valide." });
-      return;
-    }
-    setLoading(true);
-    try {
-      // Captation : l'email est enregistré dans la base audience (source episode-pdf)
-      await fetch("/api/newsletter", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          name: name || null,
-          segment: video.theme,
-          source: "episode-pdf",
-        }),
-      });
-
-      downloadPdf(
-        {
-          brand: "PodLab Media — Fiche d'épisode",
-          title: video.title,
-          subtitle: `Thématique : ${VIDEO_THEMES[video.theme]} · Chaîne YouTube PodLab (@podlabmedia)`,
-          sections: [
-            {
-              heading: "L'essentiel de cet épisode",
-              lines: THEME_HIGHLIGHTS[video.theme].map((h) => `• ${h}`),
-            },
-            {
-              heading: "Pour aller plus loin",
-              lines: [
-                `• Regardez l'épisode complet sur YouTube : ${video.youtubeUrl}`,
-                "• Abonnez-vous au PodLab Business Brief, chaque lundi matin.",
-                `• Suivez PodLab : Instagram ${SOCIALS.instagramHandle} · TikTok ${SOCIALS.tiktokHandle}`,
-              ],
-            },
-          ],
-          footer: `© PodLab Media — Fiche générée pour ${email} · ${CONTACT.email} · ${CONTACT.phoneDisplay}`,
-        },
-        `podlab-${video.videoId}.pdf`
-      );
-
-      setDone(true);
-      toast({
-        title: "Fiche PDF téléchargée",
-        description: "Vous êtes abonné(e) : les prochains résumés arriveront par email.",
-      });
-    } catch {
-      toast({ title: "Erreur", description: "Le téléchargement a échoué, réessayez." });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const reset = (v: boolean) => {
-    onOpenChange(v);
-    if (!v) {
-      setTimeout(() => {
-        setEmail("");
-        setName("");
-        setDone(false);
-      }, 250);
-    }
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={reset}>
-      <DialogContent className="glass-strong rounded-2xl border-white/10 sm:max-w-md">
-        {done ? (
-          <div className="py-6 text-center space-y-4">
-            <CheckCircle2 className="size-12 mx-auto text-white" />
-            <div>
-              <DialogTitle className="text-lg font-bold text-white">
-                Fiche PDF envoyée !
-              </DialogTitle>
-              <DialogDescription className="mt-2 text-sm text-zinc-400 leading-relaxed">
-                Le fichier a été téléchargé. Vous recevrez aussi les prochains
-                résumés d&apos;épisodes à <span className="text-zinc-200">{email}</span>.
-              </DialogDescription>
-            </div>
-            <Button variant="outline" className="rounded-lg" onClick={() => reset(false)}>
-              Fermer
-            </Button>
-          </div>
-        ) : (
-          <>
-            <DialogHeader>
-              <div className="mb-1 inline-flex w-fit items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-medium uppercase tracking-[0.2em] text-zinc-400">
-                <FileText className="size-3" /> Fiche de synthèse
-              </div>
-              <DialogTitle className="text-lg font-bold leading-snug text-white line-clamp-2">
-                {video?.title}
-              </DialogTitle>
-              <DialogDescription className="text-sm text-zinc-400 leading-relaxed">
-                Recevez la fiche de synthèse de cet épisode (thématique, points
-                clés et plan d&apos;action) directement par email.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-3 pt-1">
-              <Input
-                placeholder="Votre nom (optionnel)"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="h-11 rounded-lg bg-black/60 border-white/15 text-sm"
-              />
-              <Input
-                type="email"
-                placeholder="votre@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="h-11 rounded-lg bg-black/60 border-white/15 text-sm"
-                onKeyDown={(e) => e.key === "Enter" && submit()}
-              />
-              <Button
-                onClick={submit}
-                disabled={loading}
-                className="w-full h-11 rounded-lg gap-2 font-semibold"
-              >
-                {loading ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : (
-                  <Download className="size-4" />
-                )}
-                {loading ? "Envoi en cours…" : "Recevoir la fiche PDF"}
-              </Button>
-              <p className="text-[11px] leading-relaxed text-zinc-500 text-center">
-                En validant, vous acceptez de recevoir le PodLab Business Brief.
-                Désinscription en un clic, à tout moment.
-              </p>
-            </div>
-          </>
-        )}
-      </DialogContent>
-    </Dialog>
-  );
-}
-
 // ─── Section épisodes : catalogue réel de la chaîne YouTube ─────────────────
 export function EpisodesSection() {
   const [filter, setFilter] = useState<Filter>("all");
@@ -222,6 +33,7 @@ export function EpisodesSection() {
   const [visible, setVisible] = useState(PAGE_SIZE);
   const [selected, setSelected] = useState<PodLabVideo | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const openPlayer = usePlayerStore((s) => s.open);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -253,7 +65,7 @@ export function EpisodesSection() {
     <section className="relative py-16 md:py-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <Reveal>
-          <SectionTag index="01" label="Derniers épisodes" />
+          <SectionTag index="02" label="Derniers épisodes · Discussion Informelle" />
           <div className="mt-4 flex flex-col md:flex-row md:items-end md:justify-between gap-6">
             <h2 className="max-w-xl text-3xl md:text-5xl font-bold tracking-tight text-white">
               Des épisodes qui font{" "}
@@ -265,7 +77,7 @@ export function EpisodesSection() {
               className="w-fit gap-2 rounded-lg border-white/20 hover:bg-white/10"
               onClick={() => window.open(SOCIALS.youtube, "_blank", "noreferrer")}
             >
-              <Youtube className="size-4" /> Chaîne YouTube · +894 vidéos
+              <Youtube className="size-4" /> Chaîne YouTube · 894 vidéos
             </Button>
           </div>
         </Reveal>
@@ -338,9 +150,9 @@ export function EpisodesSection() {
                   </div>
 
                   <button
-                    onClick={() => window.open(video.youtubeUrl, "_blank", "noreferrer")}
+                    onClick={() => openPlayer(video)}
                     className="absolute inset-0 focus:outline-none"
-                    aria-label={`Ouvrir sur YouTube : ${video.title}`}
+                    aria-label={`Écouter sur le site : ${video.title}`}
                   >
                     <span className="absolute left-1/2 top-1/2 flex size-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/25 bg-black/60 text-white opacity-0 backdrop-blur-md transition-all duration-300 group-hover:opacity-100 group-hover:scale-110">
                       <Play className="size-5 translate-x-[1px]" fill="currentColor" />
@@ -361,9 +173,7 @@ export function EpisodesSection() {
                       size="sm"
                       variant="outline"
                       className="h-9 flex-1 rounded-lg gap-1.5 text-xs font-semibold border-white/15 hover:bg-white/10"
-                      onClick={() =>
-                        window.open(video.youtubeUrl, "_blank", "noreferrer")
-                      }
+                      onClick={() => openPlayer(video)}
                     >
                       <Play className="size-3.5" /> Regarder
                     </Button>

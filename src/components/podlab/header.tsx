@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Menu, LayoutDashboard, X } from "lucide-react";
+import { Menu, LayoutDashboard, X, Mic } from "lucide-react";
 import { PodLabLogo } from "./logo";
 import { navigate, useHashRoute, type Route } from "@/lib/router";
-import { LiveDot } from "./shared";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -73,7 +72,7 @@ export function Header({ active }: { active?: Route } = {}) {
 
           <div className="hidden md:flex items-center gap-3">
             <span className="flex items-center gap-2 text-xs font-medium text-zinc-500">
-              <LiveDot /> Studio live
+              <Mic className="size-3.5 animate-pulse-dot" /> Studio live
             </span>
             <Button
               variant={route === "admin" ? "default" : "outline"}

@@ -21,6 +21,7 @@ export async function GET() {
       nouveau: 0,
       kit_envoye: 0,
       rdv_cale: 0,
+      devis: 0,
       signe: 0,
     };
     for (const l of leads) {

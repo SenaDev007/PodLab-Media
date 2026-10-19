@@ -10,7 +10,11 @@ import {
   Loader2,
   Megaphone,
   Sparkles,
+  Target,
   Users,
+  ShieldCheck,
+  Clock3,
+  Share2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,10 +31,30 @@ import { cn } from "@/lib/utils";
 const CPM_PODLAB = 2500; // F CFA pour 1000 écoutes qualifiées
 const CPM_TV = 10000; // équivalent télévision/presse (4x)
 
-// ─── Tunnel de qualification B2B ─────────────────────────────────────────────
+// Objectifs ROI — copywriting §3.1 étape 2
+const GOALS = [
+  {
+    id: "branding",
+    label: "Branding & Notoriété Institutionnelle",
+    description: "Aligner votre image sur les figures de haut niveau de PodLab.",
+  },
+  {
+    id: "acquisition",
+    label: "Acquisition de Clients B2B",
+    description: "Générer des prises de contact qualifiées auprès des décideurs.",
+  },
+  {
+    id: "lancement",
+    label: "Lancement de Produit",
+    description: "Dévoiler votre offre au cœur du temps d'attention de l'audience.",
+  },
+] as const;
+
+// ─── Tunnel de qualification B2B — copywriting §3.1 (3 étapes) ───────────────
 function SponsoringTunnel() {
   const [step, setStep] = useState(0);
   const [budget, setBudget] = useState<BudgetRange | null>(null);
+  const [goal, setGoal] = useState<string | null>(null);
   const [company, setCompany] = useState("");
   const [contactName, setContactName] = useState("");
   const [email, setEmail] = useState("");
@@ -46,6 +70,7 @@ function SponsoringTunnel() {
     }
     setLoading(true);
     try {
+      const goalLabel = GOALS.find((g) => g.id === goal)?.label;
       const res = await fetch("/api/leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -55,13 +80,15 @@ function SponsoringTunnel() {
           email,
           phone: phone || null,
           budgetRange: budget,
-          message: message || null,
+          message: [goalLabel && `Objectif prioritaire : ${goalLabel}`, message]
+            .filter(Boolean)
+            .join(" — ") || null,
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setHighPriority(data.highPriority);
-      setStep(2);
+      setStep(3);
       toast({
         title: "Demande envoyée",
         description: data.message,
@@ -77,23 +104,24 @@ function SponsoringTunnel() {
     downloadPdf(
       {
         brand: "PodLab Media — Kit Média 2026",
-        title: "Kit Média & Offres de Sponsoring",
-        subtitle: "1er Média Business d'Afrique francophone · 128 000 abonnés YouTube · 18,2 M de vues cumulées · 894 vidéos",
+        title: "Kit Média & Grille Tarifaire 2026",
+        subtitle: "1er Média Business d'Afrique francophone · 128 000 décideurs · 1 million d'écoutes par trimestre · 894 vidéos",
         sections: [
           {
             heading: "L'audience PodLab en bref",
             lines: [
-              "• 128 000 abonnés YouTube · 18,2 M de vues cumulées · 894 vidéos publiées",
+              "• 128 000 décideurs abonnés · 1 million d'écoutes par trimestre",
               "• Dirigeants, investisseurs, cadres et entrepreneurs : 78% de l'audience",
               "• 14 pays : Côte d'Ivoire, Bénin, Sénégal, Togo, Cameroun en tête",
-              "• Studios physiques à Cotonou (Bénin) et Abidjan (Côte d'Ivoire)",
+              "• 2 studios internationaux 4K Broadcast — Cotonou (Bénin) & Abidjan (Côte d'Ivoire)",
             ],
           },
           {
             heading: "Nos formats pour annonceurs",
             lines: [
-              "• Mentions sponsorisées dans les formats Entrepreneuriat, Finance, Success Stories, Showbiz",
-              "• Sponsoring du PodLab Business Brief (newsletter hebdo, 2 400+ dirigeants)",
+              "• Mentions orales naturelles dans les épisodes (Finance, Success Stories, Entrepreneuriat, Showbiz)",
+              "• Intégration vidéo 4K + extraits Shorts / Reels",
+              "• Relais Newsletter B2B — Le Cercle Privé PodLab",
               "• Masterclass & enregistrements publics : speaking, stand, billetterie partenaire",
               "• Épisodes dédiés « Marque Story » produits en studio clé en main",
             ],
@@ -103,7 +131,7 @@ function SponsoringTunnel() {
             lines: [
               "• CPM PodLab : 2 500 F CFA pour 1 000 écoutes qualifiées",
               "• Équivalent TV / presse : ~10 000 F CFA le CPM (4x plus cher)",
-              "• Taux d'engagement newsletter : 34% (vs 2% display classique)",
+              "• 2 heures de temps d'attention moyen par épisode",
             ],
           },
         ],
@@ -113,16 +141,49 @@ function SponsoringTunnel() {
     );
   };
 
+  const canContinue =
+    (step === 0 && budget !== null) ||
+    (step === 1 && goal !== null) ||
+    step === 2;
+
   return (
     <div className="card-shine rounded-2xl border border-white/10 bg-zinc-950/80 p-6 md:p-8 backdrop-blur-md">
-      {/* ÉTAPE 1 — Qualificateur de budget */}
+      {/* Progression du tunnel */}
+      <div className="mb-6 flex items-center gap-2" aria-hidden>
+        {["Budget", "Objectif ROI", "Coordonnées"].map((label, i) => (
+          <div key={label} className="flex flex-1 items-center gap-2">
+            <span
+              className={cn(
+                "flex size-6 shrink-0 items-center justify-center rounded-full text-[10px] font-bold",
+                step >= i ? "bg-white text-black" : "border border-white/15 text-zinc-500"
+              )}
+            >
+              {i + 1}
+            </span>
+            <span
+              className={cn(
+                "text-[10px] font-semibold uppercase tracking-wider hidden sm:block",
+                step >= i ? "text-zinc-200" : "text-zinc-600"
+              )}
+            >
+              {label}
+            </span>
+            {i < 2 && (
+              <span className={cn("h-px flex-1", step > i ? "bg-white/60" : "bg-white/10")} />
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* ÉTAPE 1 — Qualification budgétaire (copywriting §3.1) */}
       {step === 0 && (
         <div>
           <h2 className="text-xl font-bold text-white flex items-center gap-2">
-            <Megaphone className="size-5" /> Quel budget mensuel envisagez-vous ?
+            <Megaphone className="size-5" /> Quel est le budget mensuel
+            alloué à votre visibilité ?
           </h2>
           <p className="mt-2 text-sm text-zinc-500">
-            3 niveaux d&apos;engagement, un dispositif sur mesure pour chacun.
+            3 niveaux d&apos;engagement — un dispositif calibré pour chacun.
           </p>
           <div className="mt-6 grid gap-4 md:grid-cols-3">
             {BUDGET_OPTIONS.map((opt) => (
@@ -153,12 +214,56 @@ function SponsoringTunnel() {
         </div>
       )}
 
-      {/* ÉTAPE 2 — Coordonnées entreprise */}
+      {/* ÉTAPE 2 — Objectif ROI (copywriting §3.1) */}
       {step === 1 && (
+        <div>
+          <h2 className="text-xl font-bold text-white flex items-center gap-2">
+            <Target className="size-5" /> Quel est votre objectif prioritaire ?
+          </h2>
+          <p className="mt-2 text-sm text-zinc-500">
+            Nous calibrons le dispositif (formats, épisodes, canaux) sur cet
+            objectif.
+          </p>
+          <div className="mt-6 grid gap-4">
+            {GOALS.map((g) => (
+              <button
+                key={g.id}
+                onClick={() => setGoal(g.id)}
+                className={cn(
+                  "rounded-2xl border p-5 text-left transition-all flex items-center gap-4",
+                  goal === g.id
+                    ? "border-white bg-white/[0.07]"
+                    : "border-white/10 hover:border-white/40 bg-black/50"
+                )}
+                aria-pressed={goal === g.id}
+              >
+                <span
+                  className={cn(
+                    "flex size-10 shrink-0 items-center justify-center rounded-xl border",
+                    goal === g.id
+                      ? "border-white bg-white text-black"
+                      : "border-white/15 text-zinc-400"
+                  )}
+                >
+                  <Target className="size-4" />
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-sm font-bold text-white">{g.label}</span>
+                  <span className="mt-0.5 block text-xs text-zinc-500">{g.description}</span>
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ÉTAPE 3 — Coordonnées entreprise + déblocage Kit Média */}
+      {step === 2 && (
         <div>
           <h2 className="text-xl font-bold text-white">Parlez-nous de votre marque</h2>
           <p className="mt-2 text-sm text-zinc-500">
-            Votre Kit Média est envoyé automatiquement après validation.
+            Téléchargez immédiatement notre Kit Média &amp; Grille Tarifaire
+            2026. Un responsable partenariats vous recontacte sous 24h ouvrées.
           </p>
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
@@ -185,15 +290,15 @@ function SponsoringTunnel() {
         </div>
       )}
 
-      {/* ÉTAPE 3 — Validation + déblocage Kit Média */}
-      {step === 2 && (
+      {/* ÉTAPE 4 — Confirmation + Kit Média débloqué */}
+      {step === 3 && (
         <div className="flex min-h-[300px] flex-col items-center justify-center text-center">
           <CheckCircle2 className="size-14 text-white" />
           <h2 className="mt-5 text-2xl font-bold text-white">Demande enregistrée !</h2>
           <p className="mt-2 max-w-md text-sm leading-relaxed text-zinc-400">
             {highPriority
               ? "Votre budget vous place en priorité commerciale haute : un conseiller senior PodLab vous rappelle sous 24h avec une proposition dédiée."
-              : "Merci pour votre confiance. Un membre de l'équipe partenariats vous recontacte sous 48h ouvrées."}
+              : "Merci pour votre confiance. Un responsable partenariats vous recontacte sous 24h ouvrées."}
           </p>
           {highPriority && (
             <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-xs font-semibold text-white">
@@ -202,21 +307,22 @@ function SponsoringTunnel() {
           )}
           {/* Kit Média débloqué automatiquement après validation */}
           <Button onClick={downloadMediaKit} className="mt-6 gap-2 rounded-xl h-12 px-6 font-semibold">
-            <Download className="size-4" /> Télécharger le Kit Média PDF
+            <Download className="size-4" /> Télécharger le Kit Média 2026
           </Button>
           <p className="mt-3 text-[11px] text-zinc-600">
-            Kit débloqué automatiquement · Audience, formats, tarifs 2026
+            Kit &amp; grille tarifaire débloqués immédiatement · créneaux de
+            sponsoring strictement limités par saison
           </p>
         </div>
       )}
 
-      {step < 2 && (
+      {step < 3 && (
         <div className="mt-8 flex items-center justify-between border-t border-white/10 pt-5">
           <Button variant="ghost" disabled={step === 0} onClick={() => setStep((s) => s - 1)} className="gap-2 text-zinc-400 hover:text-white">
             <ArrowLeft className="size-4" /> Retour
           </Button>
-          {step === 0 ? (
-            <Button disabled={!budget} onClick={() => setStep(1)} className="gap-2 rounded-xl font-semibold">
+          {step < 2 ? (
+            <Button disabled={!canContinue} onClick={() => setStep((s) => s + 1)} className="gap-2 rounded-xl font-semibold">
               Continuer <ArrowRight className="size-4" />
             </Button>
           ) : (
@@ -311,7 +417,26 @@ function RoiCalculator() {
   );
 }
 
-// ─── Vue Sponsoring ──────────────────────────────────────────────────────────
+// ─── Avantages annonceurs — copywriting §3 (3 bullets convertis) ────────────
+const BENEFITS = [
+  {
+    icon: ShieldCheck,
+    title: "Crédibilité Immédiate",
+    text: "Alignez votre image sur des figures de haut niveau : Stanislas Zézé, Claudy Siar, Richard Odjrado.",
+  },
+  {
+    icon: Clock3,
+    title: "Engagement Maximisé",
+    text: "2 heures de temps d'attention moyen par épisode, loin de la volatilité des réseaux sociaux.",
+  },
+  {
+    icon: Share2,
+    title: "Diffusion Multi-Canal",
+    text: "Intégration vidéo 4K, mentions orales naturelles, extraits Shorts/Reels et relais Newsletter B2B.",
+  },
+];
+
+// ─── Vue Sponsoring — copywriting §3 ─────────────────────────────────────────
 export function SponsoringView() {
   return (
     <section className="relative pt-28 pb-20 md:pt-36">
@@ -320,14 +445,16 @@ export function SponsoringView() {
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6">
         <Reveal>
           <SectionTag index="P" label="Sponsoring &amp; Partenariats B2B" />
-          <h1 className="mt-4 text-4xl md:text-6xl font-bold tracking-tight text-gradient">
-            Parlez aux décideurs<br />
-            de demain.
+          <h1 className="mt-4 max-w-3xl text-4xl md:text-6xl font-bold tracking-tight text-gradient">
+            Associez Votre Marque au Média d&apos;Affaires
+            le Plus Influent de la Région.
           </h1>
-          <p className="mt-4 max-w-xl text-sm md:text-base leading-relaxed text-zinc-400">
-            Votre marque devant 78% de cadres, investisseurs et entrepreneurs
-            d&apos;Afrique francophone. Qualifiez votre budget en 2 minutes —
-            le Kit Média se débloque automatiquement.
+          <p className="mt-4 max-w-2xl text-sm md:text-base leading-relaxed text-zinc-400">
+            Touchez 1 million de décideurs, chefs d&apos;entreprises, cadres
+            supérieurs et investisseurs chaque trimestre.{" "}
+            <span className="text-zinc-300">
+              Sans intermédiaire, au cœur de leur temps d&apos;attention.
+            </span>
           </p>
         </Reveal>
 
@@ -340,23 +467,35 @@ export function SponsoringView() {
           </Reveal>
         </div>
 
-        {/* Preuves sociales */}
+        {/* Avantages annonceurs — copywriting §3 */}
         <Reveal delay={0.18}>
           <div className="mt-12 grid gap-4 sm:grid-cols-3">
-            {[
-              { k: "78%", v: "de l'audience : cadres, dirigeants & investisseurs" },
-              { k: "34%", v: "de taux d'engagement sur le Business Brief" },
-              { k: "14", v: "pays couverts en Afrique francophone" },
-            ].map((item) => (
+            {BENEFITS.map(({ icon: Icon, title, text }) => (
               <div
-                key={item.k}
+                key={title}
                 className="rounded-2xl border border-white/10 bg-zinc-950/60 p-6 backdrop-blur"
               >
-                <div className="text-3xl font-bold text-white">{item.k}</div>
-                <p className="mt-1.5 text-xs leading-relaxed text-zinc-500">{item.v}</p>
+                <div className="flex size-10 items-center justify-center rounded-xl border border-white/15 bg-black/60 text-white">
+                  <Icon className="size-5" />
+                </div>
+                <div className="mt-4 text-sm font-bold text-white">{title}</div>
+                <p className="mt-1.5 text-xs leading-relaxed text-zinc-500">{text}</p>
               </div>
             ))}
           </div>
+        </Reveal>
+
+        {/* Rareté des créneaux + stats complémentaires */}
+        <Reveal delay={0.22}>
+          <p className="mx-auto mt-8 max-w-2xl text-center text-xs leading-relaxed text-zinc-500">
+            Avec 1 million d&apos;écoutes trimestrielles auprès de décideurs à
+            haut pouvoir d&apos;achat, nos créneaux de sponsoring pour la
+            saison en cours sont{" "}
+            <span className="text-zinc-300">
+              strictement limités afin de garantir un impact maximal
+            </span>{" "}
+            à nos marques partenaires.
+          </p>
         </Reveal>
       </div>
     </section>

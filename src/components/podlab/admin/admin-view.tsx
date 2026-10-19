@@ -22,7 +22,7 @@ import type { AdminStats } from "@/types/podlab";
 const EMPTY_STATS: AdminStats = {
   subscribers: 0,
   leads: 0,
-  leadsByStatus: { nouveau: 0, kit_envoye: 0, rdv_cale: 0, signe: 0 },
+  leadsByStatus: { nouveau: 0, kit_envoye: 0, rdv_cale: 0, devis: 0, signe: 0 },
   highPriority: 0,
   bookings: 0,
   tickets: 0,
@@ -61,7 +61,7 @@ export function AdminView() {
       icon: Mail,
       label: "Abonnés Newsletter",
       value: <CountUp to={stats.subscribers} format="full" />,
-      sub: "Base PodLab Business Brief",
+      sub: "Base du Cercle Privé PodLab",
     },
     {
       icon: Users,

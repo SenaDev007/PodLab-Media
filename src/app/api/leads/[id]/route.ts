@@ -4,7 +4,7 @@ import { updateLead } from "@/lib/store";
 
 // PATCH /api/leads/[id] — Déplacement Kanban / marquage priorité (back-office CRM)
 const schema = z.object({
-  status: z.enum(["nouveau", "kit_envoye", "rdv_cale", "signe"]).optional(),
+  status: z.enum(["nouveau", "kit_envoye", "rdv_cale", "devis", "signe"]).optional(),
   highPriority: z.boolean().optional(),
 });
 

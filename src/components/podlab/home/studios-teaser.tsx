@@ -12,7 +12,7 @@ export function StudiosTeaser() {
       <div className="absolute inset-x-0 top-0 h-64 glow-center" aria-hidden />
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6">
         <Reveal>
-          <SectionTag index="02" label="Studios physiques" />
+          <SectionTag index="03" label="Studios physiques — Cotonou &amp; Abidjan" />
           <div className="mt-4 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
             <h2 className="max-w-xl text-3xl md:text-5xl font-bold tracking-tight text-white">
               Tournez comme{" "}

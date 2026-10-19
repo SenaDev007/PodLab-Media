@@ -58,7 +58,7 @@ export interface PodLabEvent {
 
 // ─── CRM ─────────────────────────────────────────────────────────────────────
 
-export type LeadStatus = "nouveau" | "kit_envoye" | "rdv_cale" | "signe";
+export type LeadStatus = "nouveau" | "kit_envoye" | "rdv_cale" | "devis" | "signe";
 export type BudgetRange = "A" | "B" | "C";
 
 export interface Lead {

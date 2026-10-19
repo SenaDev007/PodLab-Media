@@ -244,3 +244,20 @@
 .animate-pulse-dot {
   animation: pulse-dot 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
+
+/* Waveform animée du lecteur flottant (blanc pur — design system §3) */
+@keyframes waveform {
+  0%,
+  100% {
+    transform: scaleY(0.35);
+    opacity: 0.55;
+  }
+  50% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+.waveform-bar {
+  transform-origin: center bottom;
+  animation: waveform 1.15s ease-in-out infinite;
+}

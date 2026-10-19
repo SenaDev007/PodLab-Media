@@ -1,6 +1,7 @@
 "use client";
 
 import { Hero } from "./hero";
+import { ManifestoSection } from "./manifesto-section";
 import { EpisodesSection } from "./episodes-section";
 import { StudiosTeaser } from "./studios-teaser";
 import { NewsletterSection } from "./newsletter-section";
@@ -31,6 +32,7 @@ export function HomeView() {
       </div>
 
       <EpisodesSection />
+      <ManifestoSection />
       <StudiosTeaser />
       <NewsletterSection />
     </>

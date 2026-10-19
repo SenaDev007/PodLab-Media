@@ -1,0 +1,67 @@
+// PodLab Media — Schéma BDD (SQLite)
+// Back-office : CRM Sponsoring, Audience Newsletter, Réservations Studios, Billetterie
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Abonnés Newsletter "PodLab Business Brief"
+model Subscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  segment   String   @default("general") // finance | success-stories | strategie | general
+  source    String   @default("newsletter") // newsletter | episode-pdf | sponsoring
+  createdAt DateTime @default(now())
+}
+
+// Leads Sponsoring B2B — pipeline CRM
+model Lead {
+  id           String   @id @default(cuid())
+  company      String
+  contactName  String
+  email        String
+  phone        String?
+  budgetRange  String // "A" (< 500k) | "B" (500k-1M) | "C" (> 1M)
+  budgetLabel  String   @default("")
+  message      String?
+  status       String   @default("nouveau") // nouveau | kit_envoye | rdv_cale | signe
+  highPriority Boolean  @default(false)
+  mediaKitSent Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// Réservations de studios (Cotonou / Abidjan)
+model Booking {
+  id            String   @id @default(cuid())
+  city          String // cotonou | abidjan
+  formula       String // audio | video4k | cle-en-main
+  formulaLabel  String   @default("")
+  date          String // YYYY-MM-DD
+  slot          String // ex: "09:00 – 12:00"
+  clientName    String
+  email         String
+  phone         String
+  paymentMethod String // mobile-money | carte
+  amount        Int // en F CFA
+  status        String   @default("confirme")
+  createdAt     DateTime @default(now())
+}
+
+// Billets Événements (masterclasses & enregistrements publics)
+model TicketPurchase {
+  id        String   @id @default(cuid())
+  eventId   String
+  eventName String
+  quantity  Int
+  buyerName String
+  email     String
+  amount    Int
+  createdAt DateTime @default(now())
+}

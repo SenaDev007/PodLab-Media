@@ -48,7 +48,7 @@ export function Header({ active }: { active?: Route } = {}) {
             className="flex items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60 rounded-lg px-1"
             aria-label="PodLab Media — retour à l'accueil"
           >
-            <PodLabLogo size="md" />
+            <PodLabLogo size="md" priority />
           </button>
 
           {/* Navigation desktop */}

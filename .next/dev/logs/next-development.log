@@ -1,0 +1,26 @@
+[00:00:00.835] Server  LOG     ✓ Ready in 632ms
+[00:00:03.859] Server  LOG     ○ Compiling / ...
+[00:15:13.259] Server  LOG     ✓ Compiled in 274ms
+[00:15:29.193] Server  LOG     ✓ Compiled in 277ms
+[00:15:38.549] Server  LOG     ✓ Compiled in 231ms
+[00:15:38.921] Server  LOG     ✓ Compiled in 268ms
+[00:15:45.066] Server  LOG     ✓ Compiled in 201ms
+[00:15:55.236] Server  LOG     ✓ Compiled in 151ms
+[00:18:55.742] Server  LOG     ✓ Compiled in 232ms
+[00:19:21.353] Server  LOG     ✓ Compiled in 166ms
+[00:19:46.805] Server  LOG     ✓ Compiled in 0ms
+[00:20:09.518] Server  LOG     ✓ Compiled in 214ms
+[00:25:15.518] Server  LOG     ✓ Compiled in 235ms
+[00:25:23.808] Server  LOG     ✓ Compiled in 176ms
+[00:25:32.483] Server  LOG     ✓ Compiled in 139ms
+[00:25:41.920] Server  LOG     ✓ Compiled in 542ms
+[00:26:07.312] Server  LOG     ✓ Compiled in 277ms
+[00:27:50.002] Server  LOG     prisma:query "SELECT `main`.`InvitationBooking`.`id`, `main`.`InvitationBooking`.`city`, `main`.`InvitationBooking`.`date`, `main`.`InvitationBooking`.`slot`, `main`.`InvitationBooking`.`guestName`, `main`.`InvitationBooking`.`role`, `main`.`InvitationBooking`.`email`, `main`.`InvitationBooking`.`phone`, `main`.`InvitationBooking`.`topic`, `main`.`InvitationBooking`.`format`, `main`.`InvitationBooking`.`ref`, `main`.`InvitationBooking`.`status`, `main`.`InvitationBooking`.`createdAt` FROM `main`.`InvitationBooking` WHERE (`main`.`InvitationBooking`.`city` = ? AND `main`.`InvitationBooking`.`date` = ? AND `main`.`InvitationBooking`.`slot` = ?) LIMIT ? OFFSET ?"
+[00:27:50.003] Server  LOG     prisma:query "INSERT INTO `main`.`InvitationBooking` (`id`, `city`, `date`, `slot`, `guestName`, `role`, `email`, `phone`, `topic`, `format`, `ref`, `status`, `createdAt`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?) RETURNING `id` AS `id`, `city` AS `city`, `date` AS `date`, `slot` AS `slot`, `guestName` AS `guestName`, `role` AS `role`, `email` AS `email`, `phone` AS `phone`, `topic` AS `topic`, `format` AS `format`, `ref` AS `ref`, `status` AS `status`, `createdAt` AS `createdAt`"
+[00:27:50.021] Server  LOG     prisma:query "SELECT `main`.`InvitationBooking`.`id`, `main`.`InvitationBooking`.`city`, `main`.`InvitationBooking`.`date`, `main`.`InvitationBooking`.`slot`, `main`.`InvitationBooking`.`guestName`, `main`.`InvitationBooking`.`role`, `main`.`InvitationBooking`.`email`, `main`.`InvitationBooking`.`phone`, `main`.`InvitationBooking`.`topic`, `main`.`InvitationBooking`.`format`, `main`.`InvitationBooking`.`ref`, `main`.`InvitationBooking`.`status`, `main`.`InvitationBooking`.`createdAt` FROM `main`.`InvitationBooking` WHERE (`main`.`InvitationBooking`.`city` = ? AND `main`.`InvitationBooking`.`date` = ? AND `main`.`InvitationBooking`.`slot` = ?) LIMIT ? OFFSET ?"
+[00:28:38.146] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:28:38.485] Server  LOG     prisma:query "SELECT 1"
+[00:28:38.485] Server  LOG     prisma:query "SELECT `main`.`InvitationBooking`.`id`, `main`.`InvitationBooking`.`city`, `main`.`InvitationBooking`.`date`, `main`.`InvitationBooking`.`slot`, `main`.`InvitationBooking`.`guestName`, `main`.`InvitationBooking`.`role`, `main`.`InvitationBooking`.`email`, `main`.`InvitationBooking`.`phone`, `main`.`InvitationBooking`.`topic`, `main`.`InvitationBooking`.`format`, `main`.`InvitationBooking`.`ref`, `main`.`InvitationBooking`.`status`, `main`.`InvitationBooking`.`createdAt` FROM `main`.`InvitationBooking` WHERE 1=1 ORDER BY `main`.`InvitationBooking`.`date` ASC, `main`.`InvitationBooking`.`createdAt` DESC LIMIT ? OFFSET ?"
+[00:29:03.769] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:29:03.914] Server  LOG     prisma:query "SELECT 1"
+[00:29:03.914] Server  LOG     prisma:query "SELECT `main`.`InvitationBooking`.`id`, `main`.`InvitationBooking`.`city`, `main`.`InvitationBooking`.`date`, `main`.`InvitationBooking`.`slot`, `main`.`InvitationBooking`.`guestName`, `main`.`InvitationBooking`.`role`, `main`.`InvitationBooking`.`email`, `main`.`InvitationBooking`.`phone`, `main`.`InvitationBooking`.`topic`, `main`.`InvitationBooking`.`format`, `main`.`InvitationBooking`.`ref`, `main`.`InvitationBooking`.`status`, `main`.`InvitationBooking`.`createdAt` FROM `main`.`InvitationBooking` WHERE 1=1 ORDER BY `main`.`InvitationBooking`.`date` ASC, `main`.`InvitationBooking`.`createdAt` DESC LIMIT ? OFFSET ?"

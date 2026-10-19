@@ -65,3 +65,22 @@ model TicketPurchase {
   amount    Int
   createdAt DateTime @default(now())
 }
+
+// Passages VIP à l'antenne — page /invitation (invités de prestige)
+// Prise de rendez-vous directe, sans échange d'e-mails : la référence de
+// confirmation est générée immédiatement côté serveur.
+model InvitationBooking {
+  id        String   @id @default(cuid())
+  city      String // cotonou | abidjan
+  date      String // YYYY-MM-DD
+  slot      String // ex: "09:00 – 12:00"
+  guestName String
+  role      String   @default("") // fonction / entreprise de l'invité
+  email     String
+  phone     String
+  topic     String   @default("") // sujet souhaité pour l'interview
+  format    String   @default("standard") // standard | long | sur-mesure
+  ref       String   @default("") // référence PL-VIP-XXXX
+  status    String   @default("vip-confirme")
+  createdAt DateTime @default(now())
+}

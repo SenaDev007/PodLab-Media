@@ -138,13 +138,13 @@ export function Hero() {
                   className="group absolute inset-0 flex h-full w-full flex-col items-center justify-center gap-6 focus:outline-none"
                   aria-label={`Lancer la lecture : ${ep.title}`}
                 >
-                  {/* Miniature réelle de l'épisode, traitement monochrome */}
+                  {/* Miniature réelle de l'épisode — monochrome au repos, vraies couleurs au survol */}
                   <img
                     src={ep.thumbnail}
                     alt=""
                     loading="lazy"
                     decoding="async"
-                    className="absolute inset-0 h-full w-full object-cover grayscale contrast-125 opacity-70 transition-all duration-500 group-hover:opacity-90"
+                    className="absolute inset-0 h-full w-full object-cover grayscale contrast-110 opacity-80 transition-all duration-500 group-hover:grayscale-0 group-hover:opacity-100"
                   />
                   <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/80" />
                   <div className="absolute left-5 top-5 md:left-8 md:top-8 text-left">

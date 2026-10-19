@@ -75,6 +75,14 @@ export function Footer() {
                   Newsletter
                 </button>
               </li>
+              <li>
+                <button onClick={() => navigate("invitation")} className="inline-flex items-center gap-1.5 text-zinc-400 hover:text-white transition-colors">
+                  Invitation VIP
+                  <span className="rounded-full border border-white/15 px-1.5 py-px text-[9px] font-bold uppercase tracking-wider text-zinc-500">
+                    Privé
+                  </span>
+                </button>
+              </li>
             </ul>
           </nav>
 

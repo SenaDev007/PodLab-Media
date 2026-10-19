@@ -15,7 +15,9 @@ import type {
   Lead,
   LeadStatus,
   Booking,
+  InvitationBooking,
   TicketPurchase,
+  BudgetRange,
 } from "@/types/podlab";
 
 const MEMORY_MODE = !!process.env.VERCEL;
@@ -76,12 +78,25 @@ export interface NewTicket {
   amount: number;
 }
 
+export interface NewInvitationBooking {
+  city: "cotonou" | "abidjan";
+  date: string;
+  slot: string;
+  guestName: string;
+  role?: string | null;
+  email: string;
+  phone: string;
+  topic?: string | null;
+  format: "standard" | "long" | "sur-mesure";
+}
+
 // ─── Store mémoire (mode Vercel) ─────────────────────────────────────────────
 
 interface MemoryDb {
   subscribers: Subscriber[];
   leads: Lead[];
   bookings: Booking[];
+  invitations: InvitationBooking[];
   tickets: TicketPurchase[];
   seq: number;
 }
@@ -241,6 +256,38 @@ function seedMemory(): MemoryDb {
       booking("cotonou", "video4k", "Pack Vidéo Podcast 4K", 10, "14:00 – 17:00", "Serge Agbéto", "serge.agbeto@gmail.com", "+229 95 66 77 88", "mobile-money", 150000),
       booking("abidjan", "cle-en-main", "Clé en Main (Tournage + Montage)", 12, "18:00 – 21:00", "Nadia Sylla", "nadia.sylla@wave.com", "+225 07 11 22 33", "carte", 360000),
     ],
+    invitations: [
+      {
+        id: nid(),
+        city: "cotonou",
+        date: isoDaysAhead(4),
+        slot: "09:00 – 12:00",
+        guestName: "Richard Odjrado",
+        role: "Bâtisseur — Fintech",
+        email: "contact@odjrado.dm",
+        phone: "+229 90 00 00 00",
+        topic: "Parcours d'entrepreneur en bourse",
+        format: "standard",
+        ref: "PL-VIP-A7F2",
+        status: "vip-confirme",
+        createdAt: isoDaysAgo(2),
+      },
+      {
+        id: nid(),
+        city: "abidjan",
+        date: isoDaysAhead(6),
+        slot: "14:00 – 17:00",
+        guestName: "Cabinet Hermès",
+        role: "Conseil en stratégie",
+        email: "media@hermes.dm",
+        phone: "+225 07 00 00 00 00",
+        topic: "Le conseil à l'africaine",
+        format: "long",
+        ref: "PL-VIP-B3C9",
+        status: "vip-confirme",
+        createdAt: isoDaysAgo(1),
+      },
+    ],
     tickets: [
       ticket("evt-brvm-cotonou", "Masterclass : Réussir son 1er Investissement BRVM", 2, "Diane Koffi", "diane.koffi@brvm.org", 50000, 12),
       ticket("evt-brvm-cotonou", "Masterclass : Réussir son 1er Investissement BRVM", 1, "Marc Dossou", "marc.dossou@bceao.int", 25000, 9),
@@ -335,7 +382,7 @@ export async function createLead(input: NewLead): Promise<Lead> {
       contactName: input.contactName,
       email: input.email,
       phone: input.phone ?? null,
-      budgetRange: input.budgetRange,
+      budgetRange: input.budgetRange as BudgetRange,
       budgetLabel,
       message: input.message ?? null,
       status: "nouveau",
@@ -354,7 +401,7 @@ export async function createLead(input: NewLead): Promise<Lead> {
       contactName: input.contactName,
       email: input.email,
       phone: input.phone ?? null,
-      budgetRange: input.budgetRange,
+      budgetRange: input.budgetRange as BudgetRange,
       budgetLabel,
       message: input.message ?? null,
       status: "nouveau",
@@ -423,8 +470,8 @@ export async function createBooking(input: NewBooking): Promise<Booking> {
   if (MEMORY_MODE) {
     const m = mem();
     const created: Booking = {
+      ...(input as unknown as Omit<Booking, "id" | "status" | "createdAt">),
       id: `mem-${(m.seq += 1)}`,
-      ...input,
       status: "confirme",
       createdAt: new Date().toISOString(),
     };
@@ -435,6 +482,96 @@ export async function createBooking(input: NewBooking): Promise<Booking> {
   return (await db.booking.create({
     data: { ...input, status: "confirme" },
   })) as unknown as Booking;
+}
+
+// ─── Invitations VIP — passages à l'antenne (/invitation) ────────────────────
+
+export async function listInvitationBookings(): Promise<InvitationBooking[]> {
+  if (MEMORY_MODE) {
+    return [...mem().invitations].sort((a, b) =>
+      a.date === b.date
+        ? a.createdAt < b.createdAt
+          ? 1
+          : -1
+        : a.date > b.date
+          ? 1
+          : -1
+    );
+  }
+  const db = await getDb();
+  return (await db.invitationBooking.findMany({
+    orderBy: [{ date: "asc" }, { createdAt: "desc" }],
+  })) as unknown as InvitationBooking[];
+}
+
+export async function findInvitationConflict(
+  city: string,
+  date: string,
+  slot: string
+): Promise<InvitationBooking | null> {
+  if (MEMORY_MODE) {
+    return (
+      mem().invitations.find(
+        (b) => b.city === city && b.date === date && b.slot === slot
+      ) ?? null
+    );
+  }
+  const db = await getDb();
+  return (await db.invitationBooking.findFirst({
+    where: { city, date, slot },
+  })) as unknown as InvitationBooking | null;
+}
+
+/** Référence VIP lisible : PL-VIP-A7F2. */
+function makeVipRef(): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let out = "";
+  for (let i = 0; i < 4; i++) {
+    out += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return `PL-VIP-${out}`;
+}
+
+export async function createInvitationBooking(
+  input: NewInvitationBooking
+): Promise<InvitationBooking> {
+  const ref = makeVipRef();
+  if (MEMORY_MODE) {
+    const m = mem();
+    const created: InvitationBooking = {
+      id: `mem-${(m.seq += 1)}`,
+      city: input.city,
+      date: input.date,
+      slot: input.slot,
+      guestName: input.guestName,
+      role: input.role ?? null,
+      email: input.email,
+      phone: input.phone,
+      topic: input.topic ?? null,
+      format: input.format,
+      ref,
+      status: "vip-confirme",
+      createdAt: new Date().toISOString(),
+    };
+    m.invitations.push(created);
+    return created;
+  }
+  const db = await getDb();
+  return (await db.invitationBooking.create({
+    data: {
+      city: input.city,
+      date: input.date,
+      slot: input.slot,
+      guestName: input.guestName,
+      role: input.role ?? "",
+      email: input.email,
+      phone: input.phone,
+      topic: input.topic ?? "",
+      format: input.format,
+      ref,
+      status: "vip-confirme",
+    },
+  })) as unknown as InvitationBooking;
 }
 
 export async function listTickets(): Promise<TicketPurchase[]> {

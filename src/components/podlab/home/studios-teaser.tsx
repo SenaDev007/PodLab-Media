@@ -3,6 +3,7 @@
 import { ArrowRight, Check, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Reveal, SectionTag } from "@/components/podlab/shared";
+import { CountryFlag } from "@/components/podlab/flag";
 import { STUDIOS } from "@/lib/data-mock";
 import { navigate } from "@/lib/router";
 
@@ -33,8 +34,11 @@ export function StudiosTeaser() {
                 <div className="relative h-44 md:h-52 overflow-hidden bg-black bg-grid">
                   <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-black/60 to-transparent" />
                   <div className="absolute bottom-4 left-5 flex items-center gap-3">
-                    <span className="flex size-9 items-center justify-center rounded-md border border-white/20 bg-black/80 font-mono text-xs font-bold text-white backdrop-blur">
-                      {studio.flag}
+                    <span
+                      className="block size-9 shrink-0 overflow-hidden rounded-md border border-white/20 bg-black/80 backdrop-blur"
+                      aria-hidden
+                    >
+                      <CountryFlag code={studio.flag} cover className="h-full w-full" />
                     </span>
                     <div>
                       <div className="text-xl md:text-2xl font-bold tracking-tight text-white">

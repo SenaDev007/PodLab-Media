@@ -249,12 +249,12 @@ export function EpisodesCms() {
           <GlassCard key={v.videoId} className="p-4 md:p-5">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="flex min-w-0 items-start gap-3.5">
-                <div className="relative size-11 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-black">
+                <div className="group relative size-11 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-black">
                   <img
                     src={v.thumbnail}
                     alt=""
                     loading="lazy"
-                    className="h-full w-full object-cover grayscale"
+                    className="h-full w-full object-cover grayscale transition-all duration-500 group-hover:grayscale-0"
                   />
                 </div>
                 <div className="min-w-0">

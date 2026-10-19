@@ -24,6 +24,7 @@ import { Reveal, SectionTag } from "@/components/podlab/shared";
 import { BUDGET_OPTIONS, formatCFA } from "@/lib/data-mock";
 import { CONTACT } from "@/lib/brand";
 import { downloadPdf } from "@/lib/pdf";
+import { downloadBackendPdf } from "@/lib/download";
 import { toast } from "@/hooks/use-toast";
 import type { BudgetRange } from "@/types/podlab";
 import { cn } from "@/lib/utils";
@@ -100,7 +101,14 @@ function SponsoringTunnel() {
     }
   };
 
-  const downloadMediaKit = () => {
+  const downloadMediaKit = async () => {
+    // Kit Média généré par le backend — logo officiel embarqué, mise en page
+    // professionnelle A4 (grille tarifaire incluse). Repli client si besoin.
+    const delivered = await downloadBackendPdf(
+      "/api/pdf/kit-media",
+      "podlab-kit-media-2026.pdf"
+    );
+    if (delivered) return;
     downloadPdf(
       {
         brand: "PodLab Media — Kit Média 2026",

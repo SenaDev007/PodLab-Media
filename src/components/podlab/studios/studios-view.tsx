@@ -19,6 +19,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Reveal, SectionTag } from "@/components/podlab/shared";
+import { CountryFlag } from "@/components/podlab/flag";
 import {
   BOOKING_SLOTS,
   STUDIOS,
@@ -220,8 +221,11 @@ export function StudiosView() {
                         aria-pressed={city === s.id}
                       >
                         <div className="flex items-center gap-3">
-                          <span className="flex size-11 items-center justify-center rounded-xl border border-white/15 bg-black font-mono text-sm font-bold text-white">
-                            {s.flag}
+                          <span
+                            className="block size-11 shrink-0 overflow-hidden rounded-xl border border-white/15 bg-black"
+                            aria-hidden
+                          >
+                            <CountryFlag code={s.flag} cover className="h-full w-full" />
                           </span>
                           <div>
                             <div className="text-lg font-bold text-white">{s.city}</div>

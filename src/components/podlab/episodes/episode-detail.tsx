@@ -101,7 +101,7 @@ export function EpisodeDetail({
                 <img
                   src={video.thumbnail}
                   alt={`Miniature : ${video.title}`}
-                  className="absolute inset-0 h-full w-full object-cover grayscale contrast-125 opacity-70 transition-all duration-500 group-hover:opacity-90"
+                  className="absolute inset-0 h-full w-full object-cover grayscale contrast-110 opacity-80 transition-all duration-500 group-hover:grayscale-0 group-hover:opacity-100"
                 />
                 <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/80" />
                 <span className="relative z-10 flex size-16 md:size-20 items-center justify-center rounded-full border border-white/25 bg-white/10 text-white backdrop-blur-md transition-all duration-300 group-hover:scale-110 group-hover:bg-white group-hover:text-black">

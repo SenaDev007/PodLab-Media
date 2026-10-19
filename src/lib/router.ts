@@ -16,9 +16,10 @@ export type Route =
   | "studios"
   | "sponsoring"
   | "evenements"
+  | "invitation"
   | "admin";
 
-const VALID: Route[] = ["accueil", "studios", "sponsoring", "evenements", "admin"];
+const VALID: Route[] = ["accueil", "studios", "sponsoring", "evenements", "invitation", "admin"];
 
 export function isRootPath(): boolean {
   if (typeof window === "undefined") return true;

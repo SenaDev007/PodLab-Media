@@ -17,11 +17,14 @@ export interface PodLabVideo {
 
 export type StudioCity = "cotonou" | "abidjan";
 
+/** Code pays ISO 3166-1 alpha-2 — rendu SVG via <CountryFlag />. */
+export type CountryFlagCode = "BJ" | "CI";
+
 export interface Studio {
   id: StudioCity;
   city: string;
   country: string;
-  flag: string;
+  flag: CountryFlagCode;
   address: string;
   capacity: string;
   features: string[];
@@ -98,6 +101,26 @@ export interface Booking {
   phone: string;
   paymentMethod: string;
   amount: number;
+  status: string;
+  createdAt: string;
+}
+
+// ─── Invitations VIP (passages à l'antenne — page /invitation) ───────────────
+
+export type InvitationFormat = "standard" | "long" | "sur-mesure";
+
+export interface InvitationBooking {
+  id: string;
+  city: StudioCity;
+  date: string;
+  slot: string;
+  guestName: string;
+  role?: string | null;
+  email: string;
+  phone: string;
+  topic?: string | null;
+  format: InvitationFormat;
+  ref: string;
   status: string;
   createdAt: string;
 }

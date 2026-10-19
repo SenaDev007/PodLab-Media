@@ -15,45 +15,15 @@ import { Input } from "@/components/ui/input";
 import { usePlayerStore } from "@/lib/player-store";
 import { VIDEO_THEMES } from "@/lib/videos";
 import { CONTACT, SOCIALS } from "@/lib/brand";
+import { highlightsFor } from "@/lib/episode-highlights";
 import { downloadPdf } from "@/lib/pdf";
+import { downloadBackendPdf } from "@/lib/download";
 import { toast } from "@/hooks/use-toast";
 import type { PodLabVideo } from "@/types/podlab";
 
-// ─── Points de synthèse par thématique (fiche PDF de captation) ──────────────
-const THEME_HIGHLIGHTS: Record<string, string[]> = {
-  entrepreneursuriat: [
-    "Les décisions structurantes derrière la trajectoire de l'invité",
-    "Méthodes, modèles économiques et leviers de croissance applicables en zone CFA",
-    "Erreurs à éviter et conseils opérationnels pour entrepreneurs et dirigeants",
-  ],
-  finance: [
-    "Principes d'argent, d'épargne et d'investissement partagés par l'invité",
-    "Réflexes concrets pour bâtir son indépendance financière en Afrique",
-    "Pièges financiers courants et comment les contourner",
-  ],
-  "success-stories": [
-    "Le parcours complet : débuts, obstacles et points de bascule",
-    "Les leçons de résilience transposables à votre propre projet",
-    "Vision et prochaines étapes de l'invité",
-  ],
-  showbiz: [
-    "Les coulisses de la carrière : réalités du métier et rapports à l'argent",
-    "Gestion de la notoriété, des critiques et des trahisons",
-    "Conseils aux artistes et créateurs de contenu",
-  ],
-  societe: [
-    "Analyses et révélations sur les enjeux de société abordés",
-    "Éclairages inédits sur les personnalités et institutions évoquées",
-    "Regard contextualisé sur l'actualité béninoise et africaine",
-  ],
-};
-
-const DEFAULT_HIGHLIGHTS = [
-  "Les points clés et décisions structurantes de l'épisode",
-  "Les leçons business transposables à votre contexte",
-];
-
-/** Modale de téléchargement de la fiche PDF (captation email) — partagée. */
+// ─── Modale de téléchargement de la fiche PDF (captation email) — partagée. ──────────────
+// Le PDF est généré par le backend (logo officiel embarqué) via
+// /api/pdf/episode ; l'ancien générateur client reste en repli.
 export function PdfCaptureDialog({
   video,
   open,
@@ -87,31 +57,36 @@ export function PdfCaptureDialog({
         }),
       });
 
-      downloadPdf(
-        {
-          brand: "PodLab Media — Fiche d'épisode",
-          title: video.title,
-          subtitle: `Thématique : ${VIDEO_THEMES[video.theme]} · Émission « Discussion Informelle » — Chaîne PodLab (@podlabmedia)`,
-          sections: [
-            {
-              heading: "L'essentiel de cet épisode",
-              lines: (THEME_HIGHLIGHTS[video.theme] ?? DEFAULT_HIGHLIGHTS).map(
-                (h) => `• ${h}`
-              ),
-            },
-            {
-              heading: "Pour aller plus loin",
-              lines: [
-                `• Regardez l'épisode complet sur YouTube : ${video.youtubeUrl}`,
-                "• Intégrez le Cercle Privé PodLab — l'analyse de chaque épisode, chaque dimanche à 8h.",
-                `• Suivez PodLab : Instagram ${SOCIALS.instagramHandle} · TikTok ${SOCIALS.tiktokHandle}`,
-              ],
-            },
-          ],
-          footer: `© PodLab Media — Fiche générée pour ${email} · ${CONTACT.email} · ${CONTACT.phoneDisplay}`,
-        },
-        `podlab-${video.videoId}.pdf`
+      // PDF généré par le backend (logo officiel) ; repli client si besoin
+      const delivered = await downloadBackendPdf(
+        `/api/pdf/episode?videoId=${encodeURIComponent(video.videoId)}&email=${encodeURIComponent(email)}`,
+        `podlab-fiche-${video.videoId}.pdf`
       );
+      if (!delivered) {
+        downloadPdf(
+          {
+            brand: "PodLab Media — Fiche d'épisode",
+            title: video.title,
+            subtitle: `Thématique : ${VIDEO_THEMES[video.theme]} · Émission « Discussion Informelle » — Chaîne PodLab (@podlabmedia)`,
+            sections: [
+              {
+                heading: "L'essentiel de cet épisode",
+                lines: highlightsFor(video.theme).map((h) => `• ${h}`),
+              },
+              {
+                heading: "Pour aller plus loin",
+                lines: [
+                  `• Regardez l'épisode complet sur YouTube : ${video.youtubeUrl}`,
+                  "• Intégrez le Cercle Privé PodLab — l'analyse de chaque épisode, chaque dimanche à 8h.",
+                  `• Suivez PodLab : Instagram ${SOCIALS.instagramHandle} · TikTok ${SOCIALS.tiktokHandle}`,
+                ],
+              },
+            ],
+            footer: `© PodLab Media — Fiche générée pour ${email} · ${CONTACT.email} · ${CONTACT.phoneDisplay}`,
+          },
+          `podlab-${video.videoId}.pdf`
+        );
+      }
 
       setDone(true);
       toast({

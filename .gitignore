@@ -1,2 +1,31 @@
-skills/
+# ─── Dépendances ───
 node_modules/
+
+# ─── Next.js : build & caches (générés, jamais versionnés) ───
+.next/
+out/
+next-env.d.ts
+
+# ─── Environnement (secrets locaux) ───
+.env
+.env.local
+.env*.local
+
+# ─── Bases de données locales (SQLite) ───
+db/*.db
+db/*.db-journal
+prisma/*.db
+
+# ─── Logs ───
+dev.log
+server.log
+*.log
+
+# ─── Skills internes & artefacts de travail ───
+skills/
+tool-results/
+worklog.local.md
+
+# ─── Système ───
+.DS_Store
+Thumbs.db

@@ -6,9 +6,12 @@ import {
   ArrowLeft,
   CalendarDays,
   CalendarCheck,
+  CheckCircle2,
   Clock3,
   Download,
   Eye,
+  FileText,
+  ListOrdered,
   Headphones,
   Mail,
   Play,
@@ -54,6 +57,21 @@ function synopsisFrom(raw: string): string {
   return sentences.slice(0, 3).join(" ").trim();
 }
 
+/** Thèmes réellement abordés — puces extraites de la description officielle
+ *  YouTube publiée par la rédaction (aucun contenu inventé). */
+function topicsFrom(raw: string): string[] {
+  const BULLET = /^[•●▪]\s+|^[\u2714\u2713]\uFE0F?\s+/;
+  const topics: string[] = [];
+  for (const line of raw.split("\n")) {
+    const l = line.trim();
+    if (!BULLET.test(l)) continue;
+    const t = l.replace(BULLET, "").trim();
+    if (t.length < 12 || t.length > 160 || /^https?/i.test(t)) continue;
+    topics.push(t);
+  }
+  return [...new Set(topics)].slice(0, 8);
+}
+
 function formatDate(iso: string): string {
   try {
     return new Intl.DateTimeFormat("fr-FR", {
@@ -91,6 +109,7 @@ export function EpisodeDetail({
     `Nouvel épisode de l'émission « Discussion Informelle » — le podcast business le plus écouté au Bénin et le 2ᵉ d'Afrique de l'Ouest. Une conversation sans filtre, orientée ROI, classée ${VIDEO_THEMES[video.theme]} dans le catalogue PodLab Media.`;
   const notes = video.description ? cleanNotes(video.description) : "";
   const hasLongNotes = notes.length > synopsis.length + 120;
+  const topics = topicsFrom(video.description ?? "");
 
   return (
     <section className="relative pt-28 pb-20 md:pt-36">
@@ -250,6 +269,26 @@ export function EpisodeDetail({
               </details>
             )}
 
+            {/* Au programme — chapitres thématiques issus des notes réelles */}
+            {topics.length >= 3 && (
+              <div className="mt-6">
+                <h3 className="flex items-center gap-2 text-sm font-bold text-white">
+                  <ListOrdered className="size-4" /> Au programme de cet épisode
+                </h3>
+                <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+                  {topics.map((t) => (
+                    <li
+                      key={t}
+                      className="flex items-start gap-2.5 rounded-xl border border-white/10 bg-zinc-950/80 px-3.5 py-2.5 text-[13px] leading-snug text-zinc-300"
+                    >
+                      <CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-zinc-500" />
+                      <span>{t}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             <div className="mt-6 flex flex-wrap gap-3">
               <Button
                 onClick={() => setDialogOpen(true)}
@@ -331,6 +370,38 @@ export function EpisodeDetail({
                   onClick={() => setDialogOpen(true)}
                 >
                   <Download className="size-3.5" /> Recevoir la fiche PDF
+                </Button>
+              </div>
+            </div>
+
+            {/* Transcription & synthèse lisible — cahier des charges §3.1 */}
+            <div className="mt-4 rounded-2xl border border-white/10 bg-zinc-950/80 p-6 backdrop-blur">
+              <h3 className="flex items-center gap-2 text-sm font-bold text-white">
+                <FileText className="size-4" /> Transcription &amp; synthèse
+              </h3>
+              <p className="mt-2 text-xs leading-relaxed text-zinc-500">
+                La transcription interactive complète (horodatée) est publiée
+                avec l&apos;épisode sur YouTube : ouvrez la vidéo puis « …plus »
+                → « Afficher la transcription ».
+              </p>
+              <div className="mt-4 space-y-2">
+                <Button
+                  variant="outline"
+                  className="w-full gap-2 rounded-lg border-white/20 hover:bg-white/10"
+                  onClick={() =>
+                    window.open(video.youtubeUrl, "_blank", "noreferrer")
+                  }
+                >
+                  <FileText className="size-4" /> Ouvrir la transcription
+                  YouTube
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="w-full gap-2 text-zinc-400 hover:text-white"
+                  onClick={() => setDialogOpen(true)}
+                >
+                  <Download className="size-4" /> Version lisible — fiche PDF
+                  5 min
                 </Button>
               </div>
             </div>

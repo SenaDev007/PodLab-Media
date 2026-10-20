@@ -33,7 +33,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     .replace(/\s+/g, " ")
     .trim()
     .match(/[^.!?…]+[.!?…]*/g)
-    .slice(0, 2)
+    ?.slice(0, 2)
     .join(" ") ?? "";
   const realDesc = descSentences.slice(0, 158).trim();
   const description =

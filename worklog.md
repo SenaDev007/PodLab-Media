@@ -89,3 +89,22 @@ Stage Summary:
 - 6 manques traités : compteurs corrigés (valeur finale en SSR), 75 fiches épisodes enrichies avec données RÉELLES YouTube et rendues découvrables, lecteur persistant avec reprise + vitesse + partage de passage, newsletter avec consentement + promesse claire + synchronisation Brevo prête (env vars), tunnel sponsoring avec RDV calé automatiquement dans le CRM, studios vérifiés complets.
 - Le site passe de « vitrine renvoyant vers YouTube » à « hub podcast autonome » : SEO par épisode avec contenu unique, écoute sur site avec reprise, first-party data opérationnelle (consentement + CRM + e-mailing).
 - État : build production vert, tsc/ESLint verts, prêt pour commit + push (identifiants GitHub utilisateur requis).
+
+---
+Task ID: 5
+Agent: Z.ai (agent principal)
+Task: Pousser tous les commits vers GitHub avec le token fourni par l'utilisateur + achever le dernier manque résiduel des fiches épisodes (chapitres + transcription)
+
+Work Log:
+- Push avec le token PAT fourni : 8d8057e..e3d4a2a (main → main). FETCH_HEAD vérifié = HEAD : dépôt GitHub synchronisé. L'hypothèse « l'utilisateur évaluait une version déployée obsolète » est levée — GitHub contient désormais les 6 correctifs.
+- Vérification des 6 correctifs dans le code poussé : compteurs SSR (2 Studios / 128 000 Décideurs / 1 M écoutes), formules studios (Audio Master 75 000 FCFA · Podcasting Vidéo 4K 150 000 FCFA · Production Exécutive Clé en Main 350 000 FCFA + acompte FedaPay MTN/Moov/Orange/Wave + Paystack Visa/Mastercard/GIM-UEMOA), newsletter consentement RGPD + promesse explicite + PDF immédiat, tunnel sponsoring (budget → Kit Média PDF backend → créneaux RDV 10h00/15h30 → statut CRM « RDV Calé »), lecteur persistant (reprise localStorage, vitesse 1×/1,25×/1,5×/2×, partage passage horodaté youtu.be/?t=).
+- Complément fiches épisodes (dernier résidu de l'évaluation) : bloc « Au programme de cet épisode » — chapitres thématiques extraits des puces réelles (•/✔️) des descriptions officielles YouTube via topicsFrom() ; aucun contenu inventé. Rendu conditionnel (≥3 puces). 35/75 fiches SSG concernées, vérifié dans le HTML généré.
+- Bloc « Transcription & synthèse » sur chaque fiche : accès transcription horodatée YouTube (…plus → Afficher la transcription) + version lisible fiche PDF 5 min (PdfCaptureDialog email-gated).
+- Fix TypeScript : metadata SEO /episodes/[videoId] — .match() retournait null → ?.slice() (tsc src/ 0 erreur).
+- QA : build production vert (75 fiches SSG + API), dev server redémarré propre (5 routes 200), smoke tests : POST /api/newsletter consent:true → 200 abonné en base, GET /api/pdf/episode → PDF 24,5 Ko valide, GET /api/subscribers → liste à jour.
+- Commit 8c009b0 poussé : e3d4a2a..8c009b0 main → main.
+
+Stage Summary:
+- GitHub/SenaDev007/PodLab-Media est à jour (8c009b0) : toutes les fonctionnalités du cahier des charges + les 6 correctifs de l'évaluation sont poussés et vérifiables sur le dépôt.
+- Fiches épisodes désormais complètes au sens de l'évaluation : métadonnées réelles, invités, citation, synopsis, notes, CHAPITRES thématiques réels, transcription (YouTube + PDF lisible), liens d'écoute, SEO + JSON-LD.
+- Recommandation transmise à l'utilisateur : connecter le dépôt à un déploiement automatique (Vercel/Netlify) pour que la version en ligne reflète GitHub, et renseigner BREVO_API_KEY/BREVO_LIST_ID pour activer la synchronisation e-mailing.

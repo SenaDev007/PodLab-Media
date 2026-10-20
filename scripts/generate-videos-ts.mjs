@@ -1,4 +1,7 @@
-// Génère src/lib/videos.ts à partir des métadonnées oEmbed réelles (scripts/videos-data.json)
+// Génère src/lib/videos.ts à partir des métadonnées réelles :
+//  • scripts/videos-data.json     — oEmbed (titres, miniatures)
+//  • scripts/videos-enriched.json — pages watch (dates, vues, durées,
+//    descriptions officielles) — scripts/enrich-videos.mjs + harvest-durations.mjs
 // + une cartographie thématique éditoriale (vidéo par vidéo).
 import fs from "node:fs";
 
@@ -6,9 +9,20 @@ const data = JSON.parse(
   fs.readFileSync("/home/z/my-project/scripts/videos-data.json", "utf8")
 );
 
+// Métadonnées enrichies (dates/vues/durées/descriptions réelles)
+let enriched = [];
+try {
+  enriched = JSON.parse(
+    fs.readFileSync("/home/z/my-project/scripts/videos-enriched.json", "utf8")
+  );
+} catch {
+  console.warn("⚠ scripts/videos-enriched.json introuvable — champs optionnels omis.");
+}
+const ENRICHED_BY_ID = Object.fromEntries(enriched.map((e) => [e.videoId, e]));
+
 // Thèmes éditoriaux du catalogue réel PodLab
 const THEMES = {
-  "entrepreneursuriat": "Entrepreneuriat & Business",
+  "entrepreneuriat": "Entrepreneuriat & Business",
   "finance": "Finance & Investissement",
   "success-stories": "Success Stories",
   "showbiz": "Musique & Showbiz",
@@ -101,18 +115,61 @@ const GUESTS = [
   "VITAL", "JERRY SINCLAIR", "PHILIPPE SIMO", "MYLÈNE FLICKA", "BOBO WÊ",
 ];
 
+// ─── Extraction éditoriale depuis le titre ──────────────────────────────
+// Invités : segment après « : » / « - » quand il ressemble à des noms propres.
+const STOP_WORDS = /^(le|la|les|un|une|du|de|des|au|aux|et|ou|si|son|sa|ses|notre|votre|ce|cette|ces|pour|dans|sur|avec|sans|que|qui|comment|pourquoi|quand|ils|elles|je|tu|il|elle|nous|vous|on|ne|pas|plus|est|sont|a|à)\b/i;
+function extractGuests(title) {
+  let tail = null;
+  if (/\s:\s/.test(title)) tail = title.split(/\s:\s+/).pop();
+  else if (/\s-\s/.test(title)) tail = title.split(/\s-\s+/).pop();
+  if (!tail) return null;
+  tail = tail.replace(/[«»"]/g, "").replace(/\s*\(.*?\)\s*/g, " ").trim();
+  if (!tail || tail.length < 3 || tail.length > 55) return null;
+  const parts = tail.split(/\s+(?:&|et|x|feat\.?|avec)\s+/i).map((s) => s.trim()).filter(Boolean);
+  if (!parts.length || parts.length > 4) return null;
+  const ok = parts.every((p) => {
+    const words = p.split(/\s+/);
+    if (words.length > 4) return false;
+    if (/\d/.test(p)) return false;
+    if (!/^[A-ZÀ-Þ]/.test(p)) return false;
+    if (STOP_WORDS.test(p)) return false;
+    return true;
+  });
+  return ok ? parts : null;
+}
+
+// Citation : segment entre guillemets (≥ 15 caractères) — vraie citation d'invité
+function extractCitation(title) {
+  const m = title.match(/[«"]([^»"]{15,140})[»"]/);
+  return m ? m[1].trim() : null;
+}
+
 const entries = data
   .filter((v) => v.title)
   .map((v) => {
     const title = v.title.trim().replace(/\s+/g, " ");
     const theme = THEME_MAP[v.id] ?? "showbiz";
-    return `  {
-    videoId: ${JSON.stringify(v.id)},
-    title: ${JSON.stringify(title)},
-    theme: ${JSON.stringify(theme)},
-    youtubeUrl: "https://www.youtube.com/watch?v=${v.id}",
-    thumbnail: "https://i.ytimg.com/vi/${v.id}/hqdefault.jpg",
-  },`;
+    const extra = ENRICHED_BY_ID[v.id] ?? {};
+    const guests = extractGuests(title);
+    const citation = extractCitation(title);
+    const lines = [
+      "  {",
+      `    videoId: ${JSON.stringify(v.id)},`,
+      `    title: ${JSON.stringify(title)},`,
+      `    theme: ${JSON.stringify(theme)},`,
+      `    youtubeUrl: "https://www.youtube.com/watch?v=${v.id}",`,
+      `    thumbnail: "https://i.ytimg.com/vi/${v.id}/hqdefault.jpg",`,
+    ];
+    if (extra.publishedAt) lines.push(`    publishedAt: ${JSON.stringify(extra.publishedAt)},`);
+    if (typeof extra.views === "number") lines.push(`    views: ${extra.views},`);
+    if (typeof extra.durationSeconds === "number")
+      lines.push(`    durationSeconds: ${extra.durationSeconds},`);
+    if (guests) lines.push(`    guests: ${JSON.stringify(guests)},`);
+    if (citation) lines.push(`    citation: ${JSON.stringify(citation)},`);
+    if (extra.description && extra.description.length > 30)
+      lines.push(`    description: ${JSON.stringify(extra.description.trim())},`);
+    lines.push("  },");
+    return lines.join("\n");
   });
 
 const out = `import type { PodLabVideo, VideoTheme } from "@/types/podlab";
@@ -147,6 +204,13 @@ export const CHANNEL_STATS = {
 
 fs.writeFileSync("/home/z/my-project/src/lib/videos.ts", out);
 console.log("src/lib/videos.ts généré :", entries.length, "vidéos.");
+const withDate = entries.filter((e) => e.includes("publishedAt")).length;
+const withDur = entries.filter((e) => e.includes("durationSeconds")).length;
+const withDesc = entries.filter((e) => e.includes("description:")).length;
+const withGuests = entries.filter((e) => e.includes("guests:")).length;
+console.log(
+  `Enrichies : dates ${withDate}, durées ${withDur}, descriptions ${withDesc}, invités ${withGuests}`
+);
 const counts = {};
 for (const t of Object.values(THEME_MAP)) counts[t] = (counts[t] ?? 0) + 1;
 console.log("Répartition thèmes :", counts);

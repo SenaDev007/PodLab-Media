@@ -54,6 +54,7 @@ function buildLeadMagnetPdf(email: string) {
 export function NewsletterSection() {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
+  const [consent, setConsent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
 
@@ -62,6 +63,13 @@ export function NewsletterSection() {
       toast({
         title: "Email invalide",
         description: "Renseignez une adresse email valide.",
+      });
+      return;
+    }
+    if (!consent) {
+      toast({
+        title: "Consentement requis",
+        description: "Cochez la case pour accepter de recevoir le Business Brief.",
       });
       return;
     }
@@ -75,6 +83,7 @@ export function NewsletterSection() {
           name: name || null,
           segment: "general",
           source: "newsletter",
+          consent: true,
         }),
       });
       if (!res.ok) throw new Error();
@@ -133,6 +142,36 @@ export function NewsletterSection() {
                 (grilles de lecture BRVM &amp; ratios de gestion).
               </p>
 
+              {/* Ce que reçoit l'abonné — promesse explicite */}
+              <div className="mx-auto mt-6 grid max-w-xl gap-2 text-left sm:grid-cols-3">
+                {[
+                  {
+                    n: "01",
+                    t: "L'analyse du dimanche",
+                    d: "8h00 — avant la sortie officielle de l'épisode (13h).",
+                  },
+                  {
+                    n: "02",
+                    t: "Fiches de synthèse",
+                    d: "Les épisodes décryptés en 5 min, en PDF.",
+                  },
+                  {
+                    n: "03",
+                    t: "Invitations VIP",
+                    d: "Masterclasses & enregistrements en priorité.",
+                  },
+                ].map((b) => (
+                  <div
+                    key={b.n}
+                    className="rounded-xl border border-white/10 bg-black/60 p-3"
+                  >
+                    <div className="font-mono text-[10px] text-zinc-600">{b.n}</div>
+                    <div className="mt-1 text-xs font-bold text-white">{b.t}</div>
+                    <div className="mt-1 text-[11px] leading-snug text-zinc-500">{b.d}</div>
+                  </div>
+                ))}
+              </div>
+
               {done ? (
                 <div className="mx-auto mt-8 flex max-w-md flex-col items-center gap-3 rounded-2xl border border-white/15 bg-black/70 p-6">
                   <CheckCircle2 className="size-10 text-white" />
@@ -165,6 +204,20 @@ export function NewsletterSection() {
                       aria-label="Votre adresse email"
                     />
                   </div>
+                  <label className="flex cursor-pointer items-start gap-2.5 rounded-xl border border-white/10 bg-black/50 p-3 text-left">
+                    <input
+                      type="checkbox"
+                      checked={consent}
+                      onChange={(e) => setConsent(e.target.checked)}
+                      className="mt-0.5 size-4 shrink-0 cursor-pointer accent-white"
+                      aria-label="Consentement à recevoir le PodLab Business Brief"
+                    />
+                    <span className="text-[11px] leading-relaxed text-zinc-400">
+                      J&apos;accepte de recevoir le <span className="font-semibold text-zinc-200">PodLab Business Brief</span> chaque
+                      dimanche à 8h ainsi que les fiches de synthèse. Mes données
+                      ne sont jamais revendues — <span className="text-zinc-300">désinscription en un clic</span>.
+                    </span>
+                  </label>
                   <Button
                     onClick={submit}
                     disabled={loading}

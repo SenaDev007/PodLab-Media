@@ -26,13 +26,32 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const video = getVideo(videoId);
   if (!video) return { title: "Épisode introuvable — PodLab Media" };
 
+  // Description réelle YouTube (si disponible) — unique par épisode pour Google.
+  // Coupure propre : 2 premières phrases, sans liens, max ~158 caractères.
+  const descSentences = video.description
+    ?.replace(/https?:\/\/\S+/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .match(/[^.!?…]+[.!?…]*/g)
+    .slice(0, 2)
+    .join(" ") ?? "";
+  const realDesc = descSentences.slice(0, 158).trim();
+  const description =
+    (realDesc && realDesc.length > 60
+      ? realDesc
+      : `Épisode « Discussion Informelle » · ${VIDEO_THEMES[video.theme]} · PodLab Media, 1er Média Business d'Afrique francophone (128 000 abonnés, 1 million d'écoutes par trimestre). Fiche de synthèse PDF incluse.`) +
+    " — PodLab Media";
+
   return {
     title: `${video.title} — PodLab Media`,
-    description: `Épisode « Discussion Informelle » · ${VIDEO_THEMES[video.theme]} · PodLab Media, 1er Média Business d'Afrique francophone (128 000 abonnés, 1 million d'écoutes par trimestre). Fiche de synthèse PDF incluse.`,
+    description,
     openGraph: {
       title: video.title,
-      description: `Discussion Informelle · ${VIDEO_THEMES[video.theme]} — PodLab Media`,
-      type: "video.other",
+      description: description.slice(0, 200),
+      type: "video.other" as const,
+      ...(video.publishedAt
+        ? { publishedTime: new Date(`${video.publishedAt}T12:00:00Z`).toISOString() }
+        : {}),
       images: [{ url: video.thumbnail }],
     },
   };
@@ -47,16 +66,27 @@ export default async function EpisodePage({ params }: Params) {
     (v) => v.theme === video.theme && v.videoId !== video.videoId
   ).slice(0, 3);
 
-  // Données structurées VideoObject (SEO)
+  // Données structurées VideoObject (SEO) — métadonnées réelles YouTube
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "VideoObject",
     name: video.title,
-    description: `Épisode « Discussion Informelle » · Thématique : ${VIDEO_THEMES[video.theme]} — PodLab Media, 1er Média Business d'Afrique francophone.`,
+    description:
+      video.description?.replace(/https?:\/\/\S+/g, "").replace(/\s+/g, " ").trim().slice(0, 300) ||
+      `Épisode « Discussion Informelle » · Thématique : ${VIDEO_THEMES[video.theme]} — PodLab Media, 1er Média Business d'Afrique francophone.`,
     thumbnailUrl: [video.thumbnail],
     embedUrl: `https://www.youtube.com/embed/${video.videoId}`,
     url: video.youtubeUrl,
     isFamilyFriendly: true,
+    ...(video.publishedAt
+      ? { uploadDate: new Date(`${video.publishedAt}T12:00:00Z`).toISOString() }
+      : {}),
+    ...(video.durationSeconds
+      ? {
+          duration: `PT${Math.floor(video.durationSeconds / 60)}M${video.durationSeconds % 60}S`,
+        }
+      : {}),
+    ...(video.views ? { interactionStatistic: { "@type": "InteractionCounter", interactionType: { "@type": "WatchAction" }, userInteractionCount: video.views } } : {}),
     publisher: {
       "@type": "Organization",
       name: "PodLab Media",

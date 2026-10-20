@@ -5,7 +5,9 @@ import {
   ArrowLeft,
   ArrowRight,
   BadgeCheck,
+  CalendarCheck,
   CheckCircle2,
+  Clock3,
   Download,
   Loader2,
   Megaphone,
@@ -13,7 +15,6 @@ import {
   Target,
   Users,
   ShieldCheck,
-  Clock3,
   Share2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -63,6 +64,11 @@ function SponsoringTunnel() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [highPriority, setHighPriority] = useState(false);
+  const [leadId, setLeadId] = useState<string | null>(null);
+  const [rdvDay, setRdvDay] = useState<string | null>(null);
+  const [rdvSlot, setRdvSlot] = useState<string | null>(null);
+  const [rdvConfirmed, setRdvConfirmed] = useState(false);
+  const [rdvLoading, setRdvLoading] = useState(false);
 
   const submit = async () => {
     if (!company || !contactName || !email.includes("@")) {
@@ -89,6 +95,7 @@ function SponsoringTunnel() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setHighPriority(data.highPriority);
+      setLeadId(data.lead?.id ?? null);
       setStep(3);
       toast({
         title: "Demande envoyée",
@@ -98,6 +105,48 @@ function SponsoringTunnel() {
       toast({ title: "Erreur", description: "Envoi impossible pour le moment, réessayez." });
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Prise de RDV directe avec la régie commerciale — cahier des charges §3.3
+  // (« intégration directe de calendrier »). 6 prochains jours ouvrés,
+  // 2 créneaux d'appel ; le lead passe automatiquement en « RDV Calé » CRM.
+  const rdvDays = useMemo(() => {
+    const days: Array<{ id: string; label: string }> = [];
+    const d = new Date();
+    while (days.length < 6) {
+      d.setDate(d.getDate() + 1);
+      if (d.getDay() === 0) continue; // dimanche : studio fermé
+      const label = new Intl.DateTimeFormat("fr-FR", {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+      }).format(d);
+      days.push({ id: label, label });
+    }
+    return days;
+  }, []);
+  const RDV_HOURS = ["10h00", "15h30"];
+
+  const confirmRdv = async () => {
+    if (!leadId || !rdvSlot) return;
+    setRdvLoading(true);
+    try {
+      const res = await fetch(`/api/leads/${leadId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rdvSlot }),
+      });
+      if (!res.ok) throw new Error();
+      setRdvConfirmed(true);
+      toast({
+        title: "Rendez-vous calé !",
+        description: `Appel de 30 min ${rdvSlot} — votre contact régie : ${CONTACT.phoneDisplay}.`,
+      });
+    } catch {
+      toast({ title: "Erreur", description: "Impossible de caler le RDV, réessayez." });
+    } finally {
+      setRdvLoading(false);
     }
   };
 
@@ -321,6 +370,111 @@ function SponsoringTunnel() {
             Kit &amp; grille tarifaire débloqués immédiatement · créneaux de
             sponsoring strictement limités par saison
           </p>
+
+          {/* ─── Calendrier de RDV direct avec la régie (§3.3) ─────────────── */}
+          <div className="mt-10 w-full max-w-xl rounded-2xl border border-white/10 bg-black/60 p-6 text-left backdrop-blur">
+            <div className="flex items-center gap-2.5">
+              <CalendarCheck className="size-4 text-white" />
+              <h3 className="text-sm font-bold text-white">
+                {rdvConfirmed ? "Rendez-vous confirmé" : "Planifier votre appel avec la régie commerciale"}
+              </h3>
+            </div>
+            {rdvConfirmed ? (
+              <div className="mt-4 flex items-start gap-3 rounded-xl border border-white/15 bg-white/5 p-4">
+                <BadgeCheck className="mt-0.5 size-5 shrink-0 text-white" />
+                <div>
+                  <p className="text-sm font-semibold text-white">
+                    {rdvSlot} — appel de 30 minutes
+                  </p>
+                  <p className="mt-1 text-xs leading-relaxed text-zinc-400">
+                    Votre créneau est calé dans notre CRM. Un e-mail de
+                    confirmation avec le lien visio arrive à l&apos;adresse
+                    <span className="text-zinc-200"> {email || "renseignée"}</span>.
+                    Urgence : {CONTACT.phoneDisplay}.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <>
+                <p className="mt-2 text-xs leading-relaxed text-zinc-500">
+                  Choisissez un jour ouvré et une heure d&apos;appel — votre
+                  demande passe automatiquement en « RDV Calé » auprès de notre
+                  régie. Priorité {highPriority ? "haute : conseiller senior dédié." : "standard : responsable partenariats."}
+                </p>
+                <div className="mt-4 flex gap-2 overflow-x-auto pb-1" role="group" aria-label="Choisir le jour du rendez-vous">
+                  {rdvDays.map((day) => (
+                    <button
+                      key={day.id}
+                      onClick={() => {
+                        setRdvDay(day.id);
+                        setRdvSlot(null);
+                      }}
+                      aria-pressed={rdvDay === day.id}
+                      className={cn(
+                        "min-w-[72px] shrink-0 rounded-xl border bg-black/60 px-3 py-2 text-center transition-colors",
+                        rdvDay === day.id
+                          ? "border-white bg-white/10"
+                          : "border-white/10 hover:border-white/30"
+                      )}
+                    >
+                      <span className="block text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
+                        {day.label.split(" ")[0]}
+                      </span>
+                      <span
+                        className={cn(
+                          "mt-0.5 block text-sm font-bold",
+                          rdvDay === day.id ? "text-black bg-white rounded px-1" : "text-white"
+                        )}
+                      >
+                        {day.label.split(" ")[1]}
+                      </span>
+                      <span className="block text-[10px] text-zinc-500">
+                        {day.label.split(" ").slice(2).join(" ")}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  {RDV_HOURS.map((hour) => (
+                    <button
+                      key={hour}
+                      onClick={() => {
+                        if (!rdvDay) {
+                          toast({
+                            title: "Choisissez d'abord un jour",
+                            description: "Cliquez sur un jour ouvré ci-dessus.",
+                          });
+                          return;
+                        }
+                        setRdvSlot(`${rdvDay} · ${hour}`);
+                      }}
+                      className="rounded-xl border border-white/10 bg-black/60 px-3 py-2.5 text-sm font-semibold text-zinc-300 transition-colors hover:border-white/30 hover:text-white"
+                    >
+                      <Clock3 className="mr-1.5 inline size-3.5" /> {hour}
+                    </button>
+                  ))}
+                </div>
+                {rdvSlot && (
+                  <div className="mt-4 rounded-xl border border-white/10 bg-zinc-950/80 p-3 text-center text-xs text-zinc-400">
+                    Créneau sélectionné :{" "}
+                    <span className="font-semibold text-white">{rdvSlot}</span>
+                  </div>
+                )}
+                <Button
+                  onClick={confirmRdv}
+                  disabled={!rdvSlot || rdvLoading || !leadId}
+                  className="mt-4 w-full gap-2 rounded-xl font-semibold"
+                >
+                  {rdvLoading ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <CalendarCheck className="size-4" />
+                  )}
+                  Confirmer ce rendez-vous
+                </Button>
+              </>
+            )}
+          </div>
         </div>
       )}
 

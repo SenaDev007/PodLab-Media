@@ -13,6 +13,18 @@ export interface PodLabVideo {
   theme: VideoTheme;
   youtubeUrl: string;
   thumbnail: string; // miniature YouTube hqdefault
+  /** Date de publication réelle YouTube (ISO AAAA-MM-JJ) — fiche SEO. */
+  publishedAt?: string;
+  /** Vues réelles au moment de l'extraction — preuve sociale fiche. */
+  views?: number;
+  /** Durée réelle en secondes — recoupée des écrans de fin YouTube. */
+  durationSeconds?: number;
+  /** Invités déduits du titre (noms propres après « : » / « - »). */
+  guests?: string[];
+  /** Citation d'invité mise en avant dans le titre (entre guillemets). */
+  citation?: string;
+  /** Description officielle YouTube — contenu SEO unique par épisode. */
+  description?: string;
 }
 
 export type StudioCity = "cotonou" | "abidjan";

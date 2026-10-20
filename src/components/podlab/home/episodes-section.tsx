@@ -2,7 +2,17 @@
 
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Download, Play, Search, Youtube, Loader } from "lucide-react";
+import {
+  CalendarDays,
+  Clock3,
+  Download,
+  Eye,
+  FileText,
+  Play,
+  Search,
+  Youtube,
+  Loader,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Reveal, SectionTag } from "@/components/podlab/shared";
@@ -14,6 +24,29 @@ import type { PodLabVideo, VideoTheme } from "@/types/podlab";
 import { cn } from "@/lib/utils";
 
 type Filter = "all" | VideoTheme;
+
+/** Formate une date ISO (AAAA-MM-JJ) en français : « 18 oct. 2026 ». */
+function formatEpisodeDate(iso: string): string {
+  try {
+    return new Intl.DateTimeFormat("fr-FR", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    }).format(new Date(`${iso}T12:00:00Z`));
+  } catch {
+    return iso;
+  }
+}
+
+/** Formate une durée en secondes : « 2 h 30 min », « 48 min 30 s ». */
+function formatDuration(totalSeconds: number): string {
+  const h = Math.floor(totalSeconds / 3600);
+  const m = Math.floor((totalSeconds % 3600) / 60);
+  const s = totalSeconds % 60;
+  if (h > 0) return m > 0 ? `${h} h ${m} min` : `${h} h`;
+  if (m > 0) return s > 0 ? `${m} min ${s} s` : `${m} min`;
+  return `${s} s`;
+}
 
 const FILTERS: Array<{ id: Filter; label: string }> = [
   { id: "all", label: "Tous" },
@@ -162,13 +195,37 @@ export function EpisodesSection() {
 
                 {/* Contenu */}
                 <div className="flex flex-1 flex-col p-5">
-                  <h3 className="text-sm font-bold leading-snug text-white line-clamp-2 group-hover:text-zinc-200 transition-colors">
+                  <a
+                    href={`/episodes/${video.videoId}`}
+                    className="text-sm font-bold leading-snug text-white line-clamp-2 group-hover:text-zinc-200 transition-colors"
+                    aria-label={`Voir la fiche complète : ${video.title}`}
+                  >
                     {video.title}
-                  </h3>
-                  <div className="mt-1.5 flex items-center gap-1.5 text-[11px] text-zinc-500">
-                    <Youtube className="size-3" /> PodLab · @podlabmedia
+                  </a>
+                  <div className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px] text-zinc-500">
+                    <span className="flex items-center gap-1">
+                      <Youtube className="size-3" /> @podlabmedia
+                    </span>
+                    {video.publishedAt && (
+                      <span className="flex items-center gap-1">
+                        <CalendarDays className="size-3" />
+                        {formatEpisodeDate(video.publishedAt)}
+                      </span>
+                    )}
+                    {video.durationSeconds ? (
+                      <span className="flex items-center gap-1">
+                        <Clock3 className="size-3" />
+                        {formatDuration(video.durationSeconds)}
+                      </span>
+                    ) : null}
+                    {video.views ? (
+                      <span className="flex items-center gap-1 tabular-nums">
+                        <Eye className="size-3" />
+                        {new Intl.NumberFormat("fr-FR", { notation: "compact" }).format(video.views)} vues
+                      </span>
+                    ) : null}
                   </div>
-                  <div className="mt-5 flex items-center gap-2 pt-1 mt-auto">
+                  <div className="mt-5 flex flex-wrap items-center gap-2 pt-1 mt-auto">
                     <Button
                       size="sm"
                       variant="outline"
@@ -184,6 +241,12 @@ export function EpisodesSection() {
                     >
                       <Download className="size-3.5" /> Fiche PDF
                     </Button>
+                    <a
+                      href={`/episodes/${video.videoId}`}
+                      className="flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-white/15 text-xs font-semibold text-zinc-300 transition-colors hover:bg-white/10 hover:text-white"
+                    >
+                      <FileText className="size-3.5" /> Fiche complète — invités, citation, notes
+                    </a>
                   </div>
                 </div>
               </motion.article>

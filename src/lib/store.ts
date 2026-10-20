@@ -413,13 +413,14 @@ export async function createLead(input: NewLead): Promise<Lead> {
 
 export async function updateLead(
   id: string,
-  patch: { status?: LeadStatus; highPriority?: boolean }
+  patch: { status?: LeadStatus; highPriority?: boolean; message?: string | null }
 ): Promise<Lead> {
   if (MEMORY_MODE) {
     const lead = mem().leads.find((l) => l.id === id);
     if (!lead) throw new Error("Lead introuvable");
     if (patch.status !== undefined) lead.status = patch.status;
     if (patch.highPriority !== undefined) lead.highPriority = patch.highPriority;
+    if (patch.message !== undefined) lead.message = patch.message;
     lead.updatedAt = new Date().toISOString();
     return lead;
   }

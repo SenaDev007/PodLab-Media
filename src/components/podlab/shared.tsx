@@ -31,7 +31,10 @@ export function Reveal({
   );
 }
 
-/** Compteur animé (déclenché à l'entrée dans le viewport). */
+/** Compteur animé (déclenché à l'entrée dans le viewport).
+ *  Robustesse : la valeur finale est rendue côté serveur (SSR / sans JS /
+ *  réseau 3G lent) — l'animation 0 → valeur n'est qu'une amélioration
+ *  progressive et ne masque JAMAIS le chiffre réel. */
 export function CountUp({
   to,
   duration = 1600,
@@ -49,7 +52,8 @@ export function CountUp({
 }) {
   const ref = useRef<HTMLSpanElement>(null);
   const inView = useInView(ref, { once: true, margin: "-32px" });
-  const [val, setVal] = useState(0);
+  // État initial = valeur finale → le HTML servi affiche le vrai chiffre.
+  const [val, setVal] = useState(to);
 
   useEffect(() => {
     if (!inView) return;

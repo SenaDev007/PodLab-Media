@@ -81,7 +81,7 @@ export function AudienceManager({ onChanged }: { onChanged?: () => void }) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-lg font-bold text-white">
-            Base audience — Cercle Privé PodLab
+            Base audience — PodLab Business Brief
           </h2>
           <p className="mt-1 text-xs text-zinc-500">
             {subscribers.length} abonnés · segmentation par centres

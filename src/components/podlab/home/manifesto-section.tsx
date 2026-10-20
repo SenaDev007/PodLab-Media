@@ -72,7 +72,7 @@ export function ManifestoSection() {
                   className="rounded-lg gap-2 font-semibold"
                 >
                   <Youtube className="size-4" />
-                  Rejoindre le Cercle Privé
+                  S&apos;abonner au Business Brief
                 </Button>
                 <p className="text-xs text-zinc-600">
                   L&apos;analyse qui ne passe pas au montage · chaque dimanche

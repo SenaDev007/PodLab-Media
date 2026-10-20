@@ -129,7 +129,7 @@ function SponsoringTunnel() {
             lines: [
               "• Mentions orales naturelles dans les épisodes (Finance, Success Stories, Entrepreneuriat, Showbiz)",
               "• Intégration vidéo 4K + extraits Shorts / Reels",
-              "• Relais Newsletter B2B — Le Cercle Privé PodLab",
+              "• Relais Newsletter B2B — PodLab Business Brief",
               "• Masterclass & enregistrements publics : speaking, stand, billetterie partenaire",
               "• Épisodes dédiés « Marque Story » produits en studio clé en main",
             ],

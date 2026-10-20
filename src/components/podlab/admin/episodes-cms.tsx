@@ -318,7 +318,7 @@ export function EpisodesCms() {
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => remove(v.videoId)}
-                    className="gap-2 text-red-400 focus:bg-red-500/10 focus:text-red-300"
+                    className="gap-2 text-zinc-400 focus:bg-white/10 focus:text-white"
                   >
                     <Trash2 className="size-3.5" /> Supprimer
                   </DropdownMenuItem>

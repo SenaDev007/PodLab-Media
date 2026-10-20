@@ -88,7 +88,7 @@ export const VIP_FORMATS = [
     id: "long" as const,
     label: "Format Long",
     duration: "90 – 120 min de plateau",
-    detail: "Pour les parcours complexes : rétrospective approfondie, questions du public Cercle Privé, chapitrage YouTube.",
+    detail: "Pour les parcours complexes : rétrospective approfondie, questions des abonnés du Business Brief, chapitrage YouTube.",
   },
   {
     id: "sur-mesure" as const,

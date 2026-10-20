@@ -149,7 +149,7 @@ export function Hero() {
               className="w-full sm:w-auto gap-2 rounded-xl px-7 h-12 text-sm font-semibold shadow-[0_0_40px_-8px_rgba(255,255,255,0.4)] hover:shadow-[0_0_60px_-6px_rgba(255,255,255,0.55)] transition-shadow"
             >
               <UserRoundPlus className="size-4" />
-              Rejoindre le Cercle Privé — Gratuit
+              S'abonner au Business Brief — Gratuit
             </Button>
             <Button
               size="lg"

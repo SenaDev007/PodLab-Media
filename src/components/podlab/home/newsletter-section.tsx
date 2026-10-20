@@ -9,7 +9,7 @@ import { VIDEOS } from "@/lib/videos";
 import { downloadPdf } from "@/lib/pdf";
 import { toast } from "@/hooks/use-toast";
 
-// ─── Le Cercle Privé PodLab — copywriting §5 ────────────────────────────────
+// ─── PodLab Business Brief (newsletter) — copywriting §5 ────────────────────
 // Accroche : « L'Envers du Décor Business : Ce Qui Ne Passe Pas au Montage. »
 // Lead magnet : Fiche de Synthèse Décideur (épisodes Stan Zézé & Richard
 // Odjrado — grilles de lecture BRVM & ratios de gestion), réelle (catalogue).
@@ -40,7 +40,7 @@ function buildLeadMagnetPdf(email: string) {
         ),
       },
       {
-        heading: "Le Cercle Privé PodLab",
+        heading: "PodLab Business Brief",
         lines: [
           "• Chaque dimanche matin à 8h : l'analyse confidentielle de l'épisode du jour",
           "• L'épisode sort officiellement à 13h — vous lisez l'analyse avant tout le monde",
@@ -84,7 +84,7 @@ export function NewsletterSection() {
 
       setDone(true);
       toast({
-        title: "Bienvenue dans le Cercle Privé !",
+        title: "Bienvenue dans le PodLab Business Brief !",
         description:
           "Fiche de Synthèse Décideur téléchargée — rendez-vous dimanche 8h00.",
       });
@@ -113,7 +113,7 @@ export function NewsletterSection() {
             <div className="relative mx-auto max-w-2xl px-6 py-16 md:py-20 text-center">
               <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/70 px-4 py-1.5 text-[11px] font-medium uppercase tracking-[0.22em] text-zinc-400">
                 <Mail className="size-3.5" />
-                Le Cercle Privé PodLab
+                PodLab Business Brief — Newsletter
               </div>
               <h2 className="mt-6 text-3xl md:text-4xl font-bold tracking-tight text-white">
                 L&apos;Envers du Décor Business :
@@ -137,7 +137,7 @@ export function NewsletterSection() {
                 <div className="mx-auto mt-8 flex max-w-md flex-col items-center gap-3 rounded-2xl border border-white/15 bg-black/70 p-6">
                   <CheckCircle2 className="size-10 text-white" />
                   <p className="text-sm font-semibold text-white">
-                    Bienvenue dans le Cercle Privé PodLab
+                    Bienvenue dans le PodLab Business Brief
                   </p>
                   <p className="text-xs text-zinc-500">
                     Fiche de Synthèse Décideur téléchargée. Rendez-vous chaque
@@ -177,7 +177,7 @@ export function NewsletterSection() {
                     )}
                     {loading
                       ? "Inscription en cours…"
-                      : "Recevoir la Fiche de Synthèse + Intégrer le Cercle"}
+                      : "Recevoir la Fiche de Synthèse + m'abonner au Business Brief"}
                   </Button>
                 </div>
               )}

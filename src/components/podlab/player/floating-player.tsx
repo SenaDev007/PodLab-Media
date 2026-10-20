@@ -77,7 +77,7 @@ export function PdfCaptureDialog({
                 heading: "Pour aller plus loin",
                 lines: [
                   `• Regardez l'épisode complet sur YouTube : ${video.youtubeUrl}`,
-                  "• Intégrez le Cercle Privé PodLab — l'analyse de chaque épisode, chaque dimanche à 8h.",
+                  "• Abonnez-vous au PodLab Business Brief — l'analyse de chaque épisode, chaque dimanche à 8h.",
                   `• Suivez PodLab : Instagram ${SOCIALS.instagramHandle} · TikTok ${SOCIALS.tiktokHandle}`,
                 ],
               },
@@ -168,8 +168,8 @@ export function PdfCaptureDialog({
                 {!loading && <Download className="size-4" />}
               </Button>
               <p className="text-[11px] leading-relaxed text-zinc-500 text-center">
-                En validant, vous rejoignez le Cercle Privé PodLab.
-                Désinscription en un clic, à tout moment.
+                En validant, vous rejoignez la newsletter PodLab Business
+                Brief. Désinscription en un clic, à tout moment.
               </p>
             </div>
           </>

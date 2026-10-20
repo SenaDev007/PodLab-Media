@@ -239,7 +239,7 @@ function seedMemory(): MemoryDb {
       lead("Wave Côte d'Ivoire", "Nadia Sylla", "nadia.sylla@wave.com", "+225 07 88 12 45", "C", "Sponsoring récurrent du format Success Stories, audience entrepreneurs.", "kit_envoye", true, 4),
       lead("Bénin Digital Ventures", "Fatou Ballo", "fatou.ballo@bdv.bj", "+229 96 45 78 12", "C", "Title sponsor de la masterclass BRVM à Cotonou.", "nouveau", true, 1),
       lead("NSIA Banque CI", "Linda Ekwa", "linda.ekwa@nsia.ci", "+225 27 22 40 15 60", "B", "Spot publicitaire dans les épisodes Finance & Investissement.", "kit_envoye", false, 6),
-      lead("Kayah Insurance", "Céline Quoti", "celine.quoti@kayah.com", "+229 21 31 45 67", "B", "Sponsoring du Cercle Privé PodLab (newsletter).", "devis", false, 8),
+      lead("Kayah Insurance", "Céline Quoti", "celine.quoti@kayah.com", "+229 21 31 45 67", "B", "Sponsoring du PodLab Business Brief (newsletter).", "devis", false, 8),
       lead("Sogeprom CI", "Olivier Zadi", "olivier.zadi@sogeprom.ci", "+225 05 44 21 09 88", "B", "Mention sponsor sur 4 épisodes vidéo 4K.", "signe", false, 21),
       lead("Togo Agro Solutions", "Emmanuel Sodji", "emmanuel.sodji@togo-agro.tg", "+228 90 12 34 56", "A", "Découverte du média, test sur un épisode.", "nouveau", false, 3),
       lead("Startup Academy Bénin", "Paul Hounkpè", "paul.hounkpe@startupacademy.bj", "+229 95 11 22 33", "A", "Partenariat croisement d'audiences pour nos masterclasses.", "kit_envoye", false, 11),

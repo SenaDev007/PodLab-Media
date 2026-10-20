@@ -575,7 +575,7 @@ export async function buildKitMediaPdf(): Promise<Uint8Array> {
     [
       "Mentions orales naturelles intégrées aux épisodes (Finance & Investissement, Success Stories, Entrepreneuriat, Showbiz)",
       "Intégration produit en plateau 4K + déclinaison extraits Shorts / Reels",
-      "Relais newsletter B2B « Le Cercle Privé PodLab » — audience 100 % professionnelle",
+      "Relais newsletter B2B « PodLab Business Brief » — audience 100 % professionnelle",
       "Masterclasses & enregistrements publics : speaking, stand, billetterie partenaire",
       "Épisode dédié « Marque Story » produit en studio clé en main (script, tournage, montage)",
     ],
@@ -660,7 +660,7 @@ export async function buildEpisodePdf(
   pdf.kicker("03", "Aller plus loin avec PodLab", EP.kicker, EP.title);
   pdf.bullets(
     [
-      "Rejoignez le Cercle Privé PodLab : l'analyse business de chaque épisode, chaque dimanche à 8h.",
+      "Abonnez-vous au PodLab Business Brief : l'analyse business de chaque épisode, chaque dimanche à 8h.",
       "Nos studios 4K de Cotonou et Abidjan accueillent vos propres formats — réservation en ligne.",
       `Suivez-nous : Instagram ${SOCIALS.instagramHandle} · TikTok ${SOCIALS.tiktokHandle} · Facebook ${SOCIALS.facebookHandle}.`,
     ],

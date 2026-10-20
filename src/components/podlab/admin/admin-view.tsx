@@ -61,7 +61,7 @@ export function AdminView() {
       icon: Mail,
       label: "Abonnés Newsletter",
       value: <CountUp to={stats.subscribers} format="full" />,
-      sub: "Base du Cercle Privé PodLab",
+      sub: "Base du PodLab Business Brief",
     },
     {
       icon: Users,

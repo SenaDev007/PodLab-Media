@@ -2,9 +2,13 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { listTickets, createTicket } from "@/lib/store";
 import { EVENTS } from "@/lib/data-mock";
+import { requireAdmin } from "@/lib/admin-guard";
 
-// GET /api/tickets — Ventes de billets (back-office)
-export async function GET() {
+// GET /api/tickets — Ventes de billets (back-office — session admin requise)
+export async function GET(request: Request) {
+  if (!(await requireAdmin(request))) {
+    return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
+  }
   try {
     const tickets = await listTickets();
     return NextResponse.json({ tickets });

@@ -29,3 +29,5 @@ worklog.local.md
 # ─── Système ───
 .DS_Store
 Thumbs.db
+# Repo de référence WinAgro (benchmark back-office) — usage local uniquement
+winagro-ref/

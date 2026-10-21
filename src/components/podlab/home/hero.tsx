@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Play, CalendarCheck, UserRoundPlus, Mic, Building2, Ear } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,31 +9,67 @@ import { FEATURED_VIDEO, CHANNEL_STATS } from "@/lib/videos";
 import { navigate } from "@/lib/router";
 
 // ─── Barre de preuve sociale & impact (copywriting §2.2 — 3 chiffres) ────────
-const IMPACT_NUMBERS = [
+// Valeurs par défaut = statistiques officielles de la chaîne ; elles sont
+// remplacées en direct par les chiffres clés pilotés depuis le back-office
+// (table SiteStat — même architecture que WinAgro « Gestion des Chiffres Clés »).
+const IMPACT_ICONS = [Ear, UserRoundPlus, Building2] as const;
+
+const DEFAULT_IMPACT: Array<{
+  value: number;
+  label: string;
+  sub: string;
+  prefix: string;
+  format: "full" | "compact";
+}> = [
   {
-    icon: Ear,
-    value: <CountUp to={1_000_000} format="compact" prefix="+" />,
+    value: 1_000_000,
     label: "d'Écoutes / Trimestre",
     sub: "Le podcast business le plus écouté au Bénin & 2e en Afrique de l'Ouest.",
+    prefix: "+",
+    format: "compact",
   },
   {
-    icon: UserRoundPlus,
-    value: <CountUp to={CHANNEL_STATS.subscribers} format="full" prefix="+" />,
+    value: CHANNEL_STATS.subscribers,
     label: "Décideurs",
     sub: "Une communauté engagée de dirigeants, fondateurs, créatifs et investisseurs.",
+    prefix: "+",
+    format: "full",
   },
   {
-    icon: Building2,
-    value: <CountUp to={2} />,
+    value: 2,
     label: "Studios Internationaux",
     sub: "Plateaux de tournage 4K Broadcast — Cotonou (Bénin) & Abidjan (Côte d'Ivoire).",
+    prefix: "",
+    format: "full",
   },
 ];
 
 export function Hero() {
   const [playing, setPlaying] = useState(false);
+  const [impact, setImpact] = useState(DEFAULT_IMPACT);
   const reduceMotion = useReducedMotion();
   const ep = FEATURED_VIDEO;
+
+  // Chiffres clés pilotés depuis le back-office (SiteStat) — remplacement
+  // silencieux à l'hydratation, sans flash (les défauts affichent déjà les
+  // valeurs officielles de la chaîne).
+  useEffect(() => {
+    fetch("/api/site-stats")
+      .then((r) => r.json())
+      .then((d) => {
+        if (!Array.isArray(d?.stats) || d.stats.length === 0) return;
+        setImpact(
+          d.stats.slice(0, 3).map((s: any) => ({
+            value: Number(s.value) || 0,
+            label: String(s.label),
+            sub: String(s.subText),
+            prefix: String(s.prefix ?? ""),
+            format: s.format === "compact" ? "compact" : "full",
+          }))
+        );
+      })
+      .catch(() => {});
+  }, []);
 
   return (
     <section className="relative overflow-hidden">
@@ -226,14 +262,16 @@ export function Hero() {
           transition={{ duration: 0.6, delay: 0.45 }}
           className="mx-auto mt-10 md:mt-12 grid max-w-5xl grid-cols-1 gap-3 md:grid-cols-3 md:gap-4"
         >
-          {IMPACT_NUMBERS.map(({ icon: Icon, value, label, sub }) => (
+          {impact.map(({ value, label, sub, prefix, format }, i) => {
+            const Icon = IMPACT_ICONS[i] ?? Ear;
+            return (
             <div
               key={label}
               className="card-shine rounded-2xl border border-white/10 bg-zinc-950/80 p-5 md:p-6 text-left backdrop-blur"
             >
               <div className="flex items-baseline gap-3">
                 <span className="text-3xl md:text-4xl font-bold tracking-tight text-white tabular-nums">
-                  {value}
+                  {<CountUp to={value} format={format} prefix={prefix} />}
                 </span>
                 <span className="text-sm font-semibold uppercase tracking-wide text-zinc-300">
                   {label}
@@ -244,7 +282,8 @@ export function Hero() {
                 {sub}
               </div>
             </div>
-          ))}
+            );
+          })}
         </motion.div>
       </div>
     </section>

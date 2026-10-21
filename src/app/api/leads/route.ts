@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { listLeads, createLead } from "@/lib/store";
+import { requireAdmin } from "@/lib/admin-guard";
 
-// GET /api/leads — Liste du pipeline CRM (tri : haute priorité puis date)
-export async function GET() {
+// GET /api/leads — Liste du pipeline CRM (back-office — session admin requise)
+export async function GET(request: Request) {
+  if (!(await requireAdmin(request))) {
+    return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
+  }
   try {
     const leads = await listLeads();
     return NextResponse.json({ leads });

@@ -1,5 +1,7 @@
 // PodLab Media — Schéma BDD (SQLite)
-// Back-office : CRM Sponsoring, Audience Newsletter, Réservations Studios, Billetterie
+// Back-office : CRM Sponsoring, Audience Newsletter, Réservations Studios,
+// Billetterie, Analytics d'audience, Chiffres clés éditables, Paramètres admin.
+// Modèle back-office aligné sur l'architecture WinAgro (SenaDev007/win-Agro).
 
 generator client {
   provider = "prisma-client-js"
@@ -83,4 +85,61 @@ model InvitationBooking {
   ref       String   @default("") // référence PL-VIP-XXXX
   status    String   @default("vip-confirme")
   createdAt DateTime @default(now())
+}
+
+// ─── Paramètres du back-office (identifiants admin surchargeables, etc.) ─────
+model AdminSetting {
+  key   String @id
+  value String
+
+  @@map("admin_settings")
+}
+
+// ─── Chiffres clés du site public — pilotés depuis le back-office ────────────
+// Le hero de la page d'accueil lit ces valeurs (avec repli sur les défauts).
+model SiteStat {
+  key     String @id // ecoutes_trim | decideurs | studios | videos
+  value   Int
+  label   String
+  subText String @map("sub_text")
+  prefix  String @default("")
+  format  String @default("full") // full | compact
+
+  @@map("site_stats")
+}
+
+// ─── Analytics d'audience — pageviews trackés depuis le site public ──────────
+model PageView {
+  id           String   @id @default(cuid())
+  timestamp    DateTime @default(now())
+  sessionToken String   @map("session_token")
+  path         String
+  referrer     String?
+  userAgent    String?  @map("user_agent")
+  deviceType   String?  @map("device_type")
+  browser      String?
+  country      String?
+  city         String?
+  utmSource    String?  @map("utm_source")
+  utmMedium    String?  @map("utm_medium")
+  utmCampaign  String?  @map("utm_campaign")
+
+  @@index([timestamp])
+  @@map("page_views")
+}
+
+// ─── Sessions actives — heartbeat (visiteurs en ligne) ───────────────────────
+model ActiveSession {
+  token       String   @id
+  lastSeen    DateTime @default(now()) @map("last_seen")
+  createdAt   DateTime @default(now()) @map("created_at")
+  deviceType  String?  @map("device_type")
+  browser     String?
+  country     String?
+  city        String?
+  utmSource   String?  @map("utm_source")
+  utmMedium   String?  @map("utm_medium")
+  utmCampaign String?  @map("utm_campaign")
+
+  @@map("active_sessions")
 }

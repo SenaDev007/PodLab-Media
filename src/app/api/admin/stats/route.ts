@@ -5,10 +5,14 @@ import {
   listBookings,
   listTickets,
 } from "@/lib/store";
+import { requireAdmin } from "@/lib/admin-guard";
 import type { AdminStats, LeadStatus } from "@/types/podlab";
 
-// GET /api/admin/stats — KPI du tableau de bord back-office
-export async function GET() {
+// GET /api/admin/stats — KPI du tableau de bord back-office (session admin requise)
+export async function GET(request: Request) {
+  if (!(await requireAdmin(request))) {
+    return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
+  }
   try {
     const [subscribers, leads, bookings, tickets] = await Promise.all([
       listSubscribers(),

@@ -1,4 +1,5 @@
 import { listSubscribers } from "@/lib/store";
+import { requireAdmin } from "@/lib/admin-guard";
 
 // GET /api/subscribers/export — Export CSV de la base audience (back-office)
 function escapeCsv(v: string | null | undefined): string {
@@ -11,7 +12,10 @@ function toIsoDate(createdAt: string | Date): string {
   return d.toISOString().slice(0, 10);
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  if (!(await requireAdmin(request))) {
+    return new Response("Non autorisé.", { status: 401 });
+  }
   try {
     const subscribers = await listSubscribers();
 

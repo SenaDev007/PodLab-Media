@@ -1,6 +1,7 @@
 /**
  * PodLab Media — Seed BDD
- * Peuple le back-office : abonnés newsletter, leads CRM, réservations, billets.
+ * Peuple le back-office : abonnés newsletter, leads CRM, réservations, billets,
+ * chiffres clés du site public + analytics d'audience (30 jours de trafic).
  * Exécution : bun scripts/seed.ts
  */
 import { PrismaClient } from "@prisma/client";
@@ -13,11 +14,23 @@ function daysAgo(n: number): Date {
   return d;
 }
 
+function daysAgoAt(n: number, hour: number): Date {
+  const d = daysAgo(n);
+  d.setHours(hour, Math.floor(Math.random() * 60), 0, 0);
+  return d;
+}
+
 function daysAhead(n: number): string {
   const d = new Date();
   d.setDate(d.getDate() + n);
   return d.toISOString().slice(0, 10);
 }
+
+function pick<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+// (utilitaire conservé pour les extensions futures du seed)
+void pick;
 
 async function main() {
   console.log("Seed PodLab Media...");
@@ -27,6 +40,9 @@ async function main() {
   await db.lead.deleteMany();
   await db.booking.deleteMany();
   await db.ticketPurchase.deleteMany();
+  await db.siteStat.deleteMany();
+  await db.pageView.deleteMany();
+  await db.activeSession.deleteMany();
 
   // ─── Abonnés Newsletter ───────────────────────────────────────────────
   const subscribers: Array<[string, string, string]> = [
@@ -116,11 +132,169 @@ async function main() {
     await db.ticketPurchase.create({ data: { ...t, createdAt: daysAgo(Math.floor(Math.random() * 14)) } });
   }
 
+  // ─── Chiffres clés du site public (pilotés depuis le back-office) ─────
+  const siteStats = [
+    { key: "ecoutes_trim", value: 1_000_000, label: "d'Écoutes / Trimestre", subText: "Le podcast business le plus écouté au Bénin & 2e en Afrique de l'Ouest.", prefix: "+", format: "compact" },
+    { key: "decideurs", value: 128_000, label: "Décideurs", subText: "Une communauté engagée de dirigeants, fondateurs, créatifs et investisseurs.", prefix: "+", format: "full" },
+    { key: "studios", value: 2, label: "Studios Internationaux", subText: "Plateaux de tournage 4K Broadcast — Cotonou (Bénin) & Abidjan (Côte d'Ivoire).", prefix: "", format: "full" },
+    { key: "videos", value: 894, label: "Vidéos publiées", subText: "Catalogue complet de l'émission Discussion Informelle.", prefix: "", format: "full" },
+  ];
+  for (const s of siteStats) {
+    await db.siteStat.create({ data: s });
+  }
+
+  // ─── Analytics d'audience — 30 jours de trafic réaliste ────────────
+  // Chemins réels du site (hash-routes + fiches épisodes)
+  const PATHS: Array<[string, number]> = [
+    ["/", 46],
+    ["/#/studios", 9],
+    ["/#/sponsoring", 7],
+    ["/#/evenements", 6],
+    ["/#/invitation", 4],
+    ["/episodes/ffsMdUO5dqw", 5],
+    ["/episodes/hTCraS5qU34", 4],
+    ["/episodes/v2bdmOuogvY", 3],
+    ["/studios", 4],
+    ["/sponsoring", 3],
+    ["/evenements", 2],
+    ["/invitation", 2],
+  ];
+  const REFERRERS: Array<[string, number]> = [
+    ["https://www.youtube.com/", 34],
+    ["https://www.instagram.com/", 18],
+    ["https://www.tiktok.com/", 12],
+    ["https://web.facebook.com/", 9],
+    ["https://www.google.com/", 8],
+    ["https://podlab-media.vercel.app/", 3],
+    ["", 16], // direct
+  ];
+  const UTMS: Array<[string, string, string, number]> = [
+    ["instagram", "social", "bio_lien_podlab", 16],
+    ["tiktok", "social", "clip_invité", 12],
+    ["youtube", "social", "description_ep", 14],
+    ["facebook", "social", "post_hebdo", 8],
+    ["newsletter", "email", "business_brief_dim", 6],
+    ["google", "search", "brand", 6],
+  ];
+  const DEVICES: Array<[string, number]> = [["Mobile", 68], ["Desktop", 26], ["Tablet", 6]];
+  const BROWSERS: Array<[string, number]> = [["Chrome", 58], ["Safari", 24], ["Firefox", 9], ["Opera", 6], ["Edge", 3]];
+  const GEOS: Array<[string, string, number]> = [
+    ["Bénin", "Cotonou", 38],
+    ["Côte d'Ivoire", "Abidjan", 22],
+    ["Togo", "Lomé", 8],
+    ["France", "Paris", 7],
+    ["Sénégal", "Dakar", 6],
+    ["Nigeria", "Lagos", 5],
+    ["Cameroun", "Douala", 4],
+    ["Burkina Faso", "Ouagadougou", 3],
+    ["Mali", "Bamako", 3],
+    ["États-Unis", "New York", 4],
+  ];
+
+  const TOTAL_DAYS = 30;
+  const BASE_VIEWS = 46; // vues / jour en médiane, avec croissance douce
+  const rand = (max: number) => Math.floor(Math.random() * max);
+  const weighted = <T,>(arr: Array<[T, number]>): T => {
+    const total = arr.reduce((s, [, w]) => s + w, 0);
+    let r = Math.random() * total;
+    for (const [v, w] of arr) {
+      r -= w;
+      if (r <= 0) return v;
+    }
+    return arr[arr.length - 1][0];
+  };
+
+  const SESSIONS = 380; // ~380 visiteurs uniques sur 30 jours
+  for (let s = 0; s < SESSIONS; s++) {
+    const day = rand(TOTAL_DAYS);
+    const geoIdx = weighted(GEOS.map((g, i) => [i, g[2]] as [number, number]));
+    const [country, city] = GEOS[geoIdx];
+    const device = weighted(DEVICES);
+    const browser = weighted(BROWSERS);
+    const hasUtm = Math.random() > 0.45;
+    const utm = hasUtm ? weighted(UTMS.map((u, i) => [i, u[3]] as [number, number])) : -1;
+    const [uSource, uMedium, uCampaign] = utm >= 0 ? UTMS[utm] : ["", "", ""];
+    const referrer = hasUtm && Math.random() > 0.35 ? weighted(REFERRERS) : weighted(REFERRERS);
+    const token = `sess_seed_${s.toString(36)}_${day}`;
+
+    // Session active
+    await db.activeSession.create({
+      data: {
+        token,
+        lastSeen: daysAgoAt(day, 8 + rand(14)),
+        createdAt: daysAgoAt(day, 7 + rand(5)),
+        deviceType: device,
+        browser,
+        country,
+        city,
+        utmSource: utm >= 0 ? uSource : null,
+        utmMedium: utm >= 0 ? uMedium : null,
+        utmCampaign: utm >= 0 ? uCampaign : null,
+      },
+    });
+
+    // 1 à 4 pages vues par session
+    const viewsCount = 1 + rand(4);
+    for (let v = 0; v < viewsCount; v++) {
+      const path = weighted(PATHS);
+      await db.pageView.create({
+        data: {
+          timestamp: daysAgoAt(Math.max(0, day - rand(2)), 8 + rand(14)),
+          sessionToken: token,
+          path,
+          referrer: v === 0 ? (referrer || null) : null,
+          userAgent: device === "Mobile" ? "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)" : "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+          deviceType: device,
+          browser,
+          country,
+          city,
+          utmSource: utm >= 0 ? uSource : null,
+          utmMedium: utm >= 0 ? uMedium : null,
+          utmCampaign: utm >= 0 ? uCampaign : null,
+        },
+      });
+    }
+  }
+  // Courbe de croissance : booste les ~5 derniers jours (tendance haussière)
+  const recentBoost = BASE_VIEWS * 2;
+  for (let i = 0; i < recentBoost; i++) {
+    const token = `sess_boost_${i.toString(36)}`;
+    const geoIdx: number = weighted(GEOS.map((g, j) => [j, g[2]] as [number, number]));
+    const [country, city] = GEOS[geoIdx];
+    const device = weighted(DEVICES);
+    const browser = weighted(BROWSERS);
+    const utmIdx: number = weighted(UTMS.map((u, j) => [j, u[3]] as [number, number]));
+    const [uSource, uMedium, uCampaign] = UTMS[utmIdx];
+    await db.activeSession.create({
+      data: {
+        token,
+        lastSeen: daysAgoAt(rand(4), 9 + rand(13)),
+        createdAt: daysAgoAt(rand(4), 8 + rand(12)),
+        deviceType: device, browser, country: country[0], city: country[1],
+        utmSource: uSource, utmMedium: uMedium, utmCampaign: uCampaign,
+      },
+    });
+    await db.pageView.create({
+      data: {
+        timestamp: daysAgoAt(rand(4), 9 + rand(13)),
+        sessionToken: token,
+        path: weighted(PATHS),
+        referrer: weighted(REFERRERS) || null,
+        userAgent: "Mozilla/5.0 (Linux; Android 13)",
+        deviceType: device, browser, country: country[0], city: country[1],
+        utmSource: uSource, utmMedium: uMedium, utmCampaign: uCampaign,
+      },
+    });
+  }
+
   console.log("Seed termine :", {
     subscribers: await db.subscriber.count(),
     leads: await db.lead.count(),
     bookings: await db.booking.count(),
     tickets: await db.ticketPurchase.count(),
+    siteStats: await db.siteStat.count(),
+    pageViews: await db.pageView.count(),
+    activeSessions: await db.activeSession.count(),
   });
 }
 

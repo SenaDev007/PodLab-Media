@@ -1,7 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Download, Mail, Search, Users } from "lucide-react";
+import {
+  CircleAlert,
+  Download,
+  Mail,
+  RotateCcw,
+  Search,
+  Users,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -32,13 +39,18 @@ export function AudienceManager({ onChanged }: { onChanged?: () => void }) {
   const [segment, setSegment] = useState("all");
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setLoadError(false);
     try {
       const res = await fetch("/api/subscribers");
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       setSubscribers(data.subscribers ?? []);
+    } catch {
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
@@ -154,6 +166,24 @@ export function AudienceManager({ onChanged }: { onChanged?: () => void }) {
                     </TableCell>
                   </TableRow>
                 ))
+              ) : loadError ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="py-10 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                      <CircleAlert className="size-7 text-red-500" />
+                      <p className="max-w-sm text-xs leading-relaxed text-zinc-400">
+                        La base audience n&apos;a pas pu être chargée — le serveur
+                        est peut-être indisponible.
+                      </p>
+                      <button
+                        onClick={load}
+                        className="inline-flex items-center gap-2 rounded-xl border border-white/20 px-3.5 py-2 text-[11px] font-bold text-white transition-colors hover:bg-white/10"
+                      >
+                        <RotateCcw className="size-3" /> Réessayer
+                      </button>
+                    </div>
+                  </TableCell>
+                </TableRow>
               ) : filtered.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="py-10 text-center text-sm text-zinc-600">

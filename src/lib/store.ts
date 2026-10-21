@@ -76,6 +76,7 @@ export interface NewTicket {
   buyerName: string;
   email: string;
   amount: number;
+  status?: string;
 }
 
 export interface NewInvitationBooking {
@@ -203,6 +204,7 @@ function seedMemory(): MemoryDb {
     buyerName,
     email,
     amount,
+    status: "paye",
     createdAt: isoDaysAgo(days),
   });
 
@@ -413,14 +415,23 @@ export async function createLead(input: NewLead): Promise<Lead> {
 
 export async function updateLead(
   id: string,
-  patch: { status?: LeadStatus; highPriority?: boolean; message?: string | null }
+  patch: {
+    status?: LeadStatus;
+    highPriority?: boolean;
+    message?: string | null;
+    company?: string;
+    contactName?: string;
+    email?: string;
+    phone?: string | null;
+    budgetRange?: string;
+    budgetLabel?: string;
+    mediaKitSent?: boolean;
+  }
 ): Promise<Lead> {
   if (MEMORY_MODE) {
     const lead = mem().leads.find((l) => l.id === id);
     if (!lead) throw new Error("Lead introuvable");
-    if (patch.status !== undefined) lead.status = patch.status;
-    if (patch.highPriority !== undefined) lead.highPriority = patch.highPriority;
-    if (patch.message !== undefined) lead.message = patch.message;
+    Object.assign(lead, patch);
     lead.updatedAt = new Date().toISOString();
     return lead;
   }
@@ -429,6 +440,17 @@ export async function updateLead(
     where: { id },
     data: patch,
   })) as unknown as Lead;
+}
+
+export async function deleteLead(id: string): Promise<void> {
+  if (MEMORY_MODE) {
+    const m = mem();
+    const i = m.leads.findIndex((l) => l.id === id);
+    if (i >= 0) m.leads.splice(i, 1);
+    return;
+  }
+  const db = await getDb();
+  await db.lead.delete({ where: { id } });
 }
 
 export async function listBookings(): Promise<Booking[]> {
@@ -593,6 +615,7 @@ export async function createTicket(input: NewTicket): Promise<TicketPurchase> {
     const created: TicketPurchase = {
       id: `mem-${(m.seq += 1)}`,
       ...input,
+      status: input.status ?? "paye",
       createdAt: new Date().toISOString(),
     };
     m.tickets.unshift(created);
@@ -606,4 +629,71 @@ export async function createTicket(input: NewTicket): Promise<TicketPurchase> {
 
 export function isMemoryMode(): boolean {
   return MEMORY_MODE;
+}
+
+// ─── Mutations back-office — sessions studio (planning) ───────────────────────
+
+export async function updateBooking(
+  id: string,
+  patch: {
+    status?: string; // confirme | termine | annule
+    date?: string;
+    slot?: string;
+    clientName?: string;
+    email?: string;
+    phone?: string;
+  }
+): Promise<Booking> {
+  if (MEMORY_MODE) {
+    const b = mem().bookings.find((x) => x.id === id);
+    if (!b) throw new Error("Réservation introuvable");
+    Object.assign(b, patch);
+    return b;
+  }
+  const db = await getDb();
+  return (await db.booking.update({
+    where: { id },
+    data: patch,
+  })) as unknown as Booking;
+}
+
+export async function deleteBooking(id: string): Promise<void> {
+  if (MEMORY_MODE) {
+    const m = mem();
+    const i = m.bookings.findIndex((x) => x.id === id);
+    if (i >= 0) m.bookings.splice(i, 1);
+    return;
+  }
+  const db = await getDb();
+  await db.booking.delete({ where: { id } });
+}
+
+// ─── Mutations back-office — billetterie ──────────────────────────────────────
+
+export async function updateTicket(
+  id: string,
+  patch: { status?: string } // paye | rembourse | annule
+): Promise<TicketPurchase> {
+  if (MEMORY_MODE) {
+    const t = mem().tickets.find((x) => x.id === id);
+    if (!t) throw new Error("Achat introuvable");
+    Object.assign(t, patch);
+    return t;
+  }
+  const db = await getDb();
+  return (await db.ticketPurchase.update({
+    where: { id },
+    data: patch,
+  })) as unknown as TicketPurchase;
+}
+
+export async function deleteTicket(id: string): Promise<void> {
+  if (MEMORY_MODE) {
+    const m = mem();
+    const i = m.tickets.findIndex((x) => x.id === id);
+    if (i >= 0) m.tickets.splice(i, 1);
+    return;
+  }
+  const db = await getDb();
+  await db.ticketPurchase.delete({ where: { id } });
 }

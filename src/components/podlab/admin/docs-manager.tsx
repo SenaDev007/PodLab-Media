@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   ChevronDown,
   ChevronUp,
+  CircleAlert,
   Eye,
   FileText,
   Loader2,
@@ -388,6 +389,7 @@ export function DocsManager() {
   const [savedPublished, setSavedPublished] = useState<boolean | null>(null);
   const [savedAt, setSavedAt] = useState<string | null>(null);
   const [loadingSheet, setLoadingSheet] = useState(false);
+  const [sheetError, setSheetError] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [previewing, setPreviewing] = useState(false);
@@ -398,14 +400,18 @@ export function DocsManager() {
     setLoadingIndex(true);
     try {
       const res = await fetch(`/api/admin/doc-sheets?docType=${t}`);
-      if (res.ok) {
-        const d = await res.json();
-        const map: Record<string, IndexEntry> = {};
-        for (const s of d.sheets ?? []) map[s.scopeKey] = s;
-        setIndex(map);
-      }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const d = await res.json();
+      const map: Record<string, IndexEntry> = {};
+      for (const s of d.sheets ?? []) map[s.scopeKey] = s;
+      setIndex(map);
     } catch {
-      // silencieux
+      // Non bloquant : le catalogue d'épisodes reste listé depuis VIDEOS.
+      toast({
+        variant: "destructive",
+        title: "Index des fiches indisponible",
+        description: "Les personnalisations enregistrées n'ont pas pu être listées.",
+      });
     } finally {
       setLoadingIndex(false);
     }
@@ -414,20 +420,30 @@ export function DocsManager() {
   // Chargement d'une fiche (enregistrée + défauts)
   const loadSheet = useCallback(async (t: DocType, scopeKey: string) => {
     setLoadingSheet(true);
+    setSheetError(false);
     try {
       const res = await fetch(
         `/api/admin/doc-sheets?docType=${t}&scopeKey=${encodeURIComponent(scopeKey)}`
       );
-      if (res.ok) {
-        const d = await res.json();
-        setDefaults(d.defaults ?? null);
-        setDraft(d.saved ?? d.defaults ?? null);
-        setSavedPublished(d.saved ? d.saved.published : null);
-        setSavedAt(d.saved?.updatedAt ?? null);
-        setDirty(false);
-      }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const d = await res.json();
+      setDefaults(d.defaults ?? null);
+      setDraft(d.saved ?? d.defaults ?? null);
+      setSavedPublished(d.saved ? d.saved.published : null);
+      setSavedAt(d.saved?.updatedAt ?? null);
+      setDirty(false);
     } catch {
-      // silencieux
+      // Échec visible : bandeau rouge + bouton Réessayer — plus de retour
+      // silencieux au message « sélectionnez un épisode ».
+      setDraft(null);
+      setDefaults(null);
+      setSheetError(true);
+      toast({
+        variant: "destructive",
+        title: "Fiche impossible à charger",
+        description:
+          "Le serveur n'a pas répondu — vérifiez qu'il est actif puis réessayez.",
+      });
     } finally {
       setLoadingSheet(false);
     }
@@ -441,6 +457,7 @@ export function DocsManager() {
     setSelected(null);
     setSavedPublished(null);
     setSavedAt(null);
+    setSheetError(false);
     setDirty(false);
     loadIndex(typeId);
     if (!activeType.perEpisode) {
@@ -713,7 +730,27 @@ export function DocsManager() {
 
         {/* Éditeur de la fiche */}
         <div className={activeType.perEpisode ? "xl:col-span-7" : "xl:col-span-12"}>
-          {selected === null || loadingSheet || !draft ? (
+          {sheetError && selected !== null && !loadingSheet ? (
+            <div className="flex min-h-[24rem] flex-col items-center justify-center gap-4 rounded-2xl border border-red-500/50 bg-red-950/40 p-8 text-center backdrop-blur">
+              <CircleAlert className="size-10 text-red-500" />
+              <div>
+                <p className="text-sm font-bold text-red-400">
+                  Fiche impossible à charger
+                </p>
+                <p className="mx-auto mt-2 max-w-sm text-xs leading-relaxed text-zinc-400">
+                  Le serveur n&apos;a pas répondu
+                  {selectedVideo ? ` pour « ${selectedVideo.title} »` : ""}.
+                  Il est peut-être en cours de redémarrage — réessayez.
+                </p>
+              </div>
+              <button
+                onClick={() => selected !== null && loadSheet(typeId, selected)}
+                className="inline-flex items-center gap-2 rounded-xl border border-white/20 px-4 py-2.5 text-xs font-bold text-white transition-colors hover:bg-white/10"
+              >
+                <RotateCcw className="size-3.5" /> Réessayer
+              </button>
+            </div>
+          ) : selected === null || loadingSheet || !draft ? (
             <div className="flex min-h-[24rem] items-center justify-center rounded-2xl border border-white/10 bg-zinc-950/80 text-sm text-zinc-500 backdrop-blur">
               {loadingSheet ? (
                 <span className="flex items-center gap-3">

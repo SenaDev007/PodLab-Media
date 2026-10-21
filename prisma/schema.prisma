@@ -65,6 +65,7 @@ model TicketPurchase {
   buyerName String
   email     String
   amount    Int
+  status    String   @default("paye") // paye | rembourse | annule
   createdAt DateTime @default(now())
 }
 
@@ -118,6 +119,28 @@ model AdminSetting {
   value String
 
   @@map("admin_settings")
+}
+
+// ─── CMS Épisodes — épisodes ajoutés + surcharges de statut du catalogue ────
+// isCustom=false → simple override (statut publie/brouillon/retire) d'un
+// épisode du catalogue officiel (VIDEOS) ; isCustom=true → épisode créé
+// depuis le back-office (brouillon → publication).
+model ManagedEpisode {
+  id            String   @id @default(cuid())
+  videoId       String   @unique
+  isCustom      Boolean  @default(false)
+  title         String
+  guest         String?
+  theme         String
+  youtubeUrl    String
+  thumbnail     String?
+  excerpt       String? // résumé public — HTML riche
+  transcription String? // transcription SEO — HTML riche
+  status        String   @default("brouillon") // publie | brouillon | retire
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("managed_episodes")
 }
 
 // ─── Chiffres clés du site public — pilotés depuis le back-office ────────────

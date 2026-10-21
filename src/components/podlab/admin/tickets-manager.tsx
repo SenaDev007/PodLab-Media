@@ -2,22 +2,38 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  CircleAlert,
   Crown,
   Loader2,
   Mail,
+  MoreHorizontal,
   Phone,
   RefreshCw,
+  RotateCcw,
   Ticket,
+  Trash2,
+  Undo2,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { GlassCard } from "@/components/podlab/shared";
 import { formatCFA } from "@/lib/data-mock";
 import { CountryFlag } from "@/components/podlab/flag";
+import { toast } from "@/hooks/use-toast";
 import type { TicketPurchase } from "@/types/podlab";
+import { cn } from "@/lib/utils";
 
 /**
  * Billetterie & Passages VIP — vue back-office pour les achats de billets
  * (TicketPurchase) et les invités de prestige venus passer à l'antenne
- * (InvitationBooking, page /invitation). Complète le planning studios.
+ * (InvitationBooking, page /invitation). Workflow complet par vente :
+ * payé / remboursé / annulé + suppression, via PATCH/DELETE /api/tickets/[id].
  */
 
 interface InvitationRow {
@@ -48,23 +64,42 @@ function formatDate(iso: string): string {
   }
 }
 
+const TICKET_STATUS: Record<string, { label: string; cls: string }> = {
+  paye: {
+    label: "Payé",
+    cls: "bg-white px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-black rounded-full",
+  },
+  rembourse: {
+    label: "Remboursé",
+    cls: "border border-white/20 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-zinc-300 rounded-full",
+  },
+  annule: {
+    label: "Annulé",
+    cls: "border border-red-500/50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-red-400 rounded-full",
+  },
+};
+
 export function TicketsManager() {
   const [tickets, setTickets] = useState<TicketPurchase[]>([]);
   const [invitations, setInvitations] = useState<InvitationRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<TicketPurchase | null>(null);
 
   const load = useCallback(async (withSpin = false) => {
     if (withSpin) setRefreshing(true);
+    setLoadError(false);
     try {
       const [rt, ri] = await Promise.all([
         fetch("/api/tickets"),
         fetch("/api/invitations"),
       ]);
+      if (!rt.ok) throw new Error();
       if (rt.ok) setTickets((await rt.json()).tickets ?? []);
       if (ri.ok) setInvitations((await ri.json()).invitations ?? []);
     } catch {
-      // silencieux
+      setLoadError(true);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -76,19 +111,75 @@ export function TicketsManager() {
   }, [load]);
 
   const ticketRevenue = useMemo(
-    () => tickets.reduce((s, t) => s + t.amount, 0),
+    () => tickets.filter((t) => t.status !== "annule" && t.status !== "rembourse").reduce((s, t) => s + t.amount, 0),
     [tickets]
   );
   const ticketCount = useMemo(
-    () => tickets.reduce((s, t) => s + t.quantity, 0),
+    () => tickets.filter((t) => t.status !== "annule").reduce((s, t) => s + t.quantity, 0),
     [tickets]
   );
+
+  const patchTicket = async (t: TicketPurchase, status: string, msg: string) => {
+    try {
+      const res = await fetch(`/api/tickets/${t.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      if (!res.ok) throw new Error();
+      toast({
+        title: msg,
+        description: `${t.buyerName} — ${t.eventName} (${t.quantity} billet${t.quantity > 1 ? "s" : ""}).`,
+      });
+      load();
+    } catch {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Mise à jour impossible.",
+      });
+    }
+  };
+
+  const removeTicket = async (t: TicketPurchase) => {
+    try {
+      const res = await fetch(`/api/tickets/${t.id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error();
+      toast({
+        title: "Vente supprimée",
+        description: `${t.buyerName} — l'enregistrement a été retiré.`,
+      });
+      setConfirmDelete(null);
+      load();
+    } catch {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Suppression impossible.",
+      });
+    }
+  };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center gap-3 rounded-2xl border border-white/10 bg-zinc-950/80 py-20 text-sm text-zinc-400">
         <Loader2 className="size-4 animate-spin" /> Chargement de la billetterie…
       </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <GlassCard className="flex flex-col items-center gap-3 p-10 text-center">
+        <CircleAlert className="size-8 text-red-500" />
+        <p className="max-w-sm text-sm leading-relaxed text-zinc-400">
+          La billetterie n&apos;a pas pu être chargée. Vérifiez que le serveur
+          est actif, puis relancez.
+        </p>
+        <Button onClick={() => load(true)} variant="outline" className="gap-2 rounded-lg">
+          <RotateCcw className="size-3.5" /> Réessayer
+        </Button>
+      </GlassCard>
     );
   }
 
@@ -138,7 +229,7 @@ export function TicketsManager() {
           <p className="mt-4 text-xs text-zinc-500">Aucune vente enregistrée.</p>
         ) : (
           <div className="mt-4 overflow-x-auto">
-            <table className="w-full min-w-[720px] text-left text-xs">
+            <table className="w-full min-w-[820px] text-left text-xs">
               <thead>
                 <tr className="border-b border-white/10 text-[10px] uppercase tracking-[0.18em] text-zinc-500">
                   <th className="pb-3 pr-4 font-semibold">Événement</th>
@@ -146,12 +237,16 @@ export function TicketsManager() {
                   <th className="pb-3 pr-4 font-semibold">Contact</th>
                   <th className="pb-3 pr-4 font-semibold">Qté</th>
                   <th className="pb-3 pr-4 font-semibold">Montant</th>
-                  <th className="pb-3 font-semibold">Date</th>
+                  <th className="pb-3 pr-4 font-semibold">Statut</th>
+                  <th className="pb-3 pr-4 font-semibold">Date</th>
+                  <th className="pb-3 font-semibold text-right">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {tickets.map((t) => (
-                  <tr key={t.id} className="border-b border-white/5 text-zinc-300">
+                {tickets.map((t) => {
+                  const st = TICKET_STATUS[t.status ?? "paye"] ?? TICKET_STATUS.paye;
+                  return (
+                  <tr key={t.id} className={cn("border-b border-white/5 text-zinc-300", t.status === "annule" && "opacity-50")}>
                     <td className="py-3 pr-4 font-semibold text-white">{t.eventName}</td>
                     <td className="py-3 pr-4">{t.buyerName}</td>
                     <td className="py-3 pr-4 text-zinc-500">
@@ -159,9 +254,60 @@ export function TicketsManager() {
                     </td>
                     <td className="py-3 pr-4 tabular-nums">{t.quantity}</td>
                     <td className="py-3 pr-4 font-semibold tabular-nums text-white">{formatCFA(t.amount)}</td>
-                    <td className="py-3 text-zinc-500">{formatDate(t.createdAt)}</td>
+                    <td className="py-3 pr-4">
+                      <span className={st.cls}>{st.label}</span>
+                    </td>
+                    <td className="py-3 pr-4 text-zinc-500">{formatDate(t.createdAt)}</td>
+                    <td className="py-3 text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="size-7 rounded-md border-white/15"
+                            aria-label="Actions vente"
+                          >
+                            <MoreHorizontal className="size-3.5" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="glass-strong border-white/10">
+                          {(t.status ?? "paye") !== "paye" && (
+                            <DropdownMenuItem
+                              onClick={() => patchTicket(t, "paye", "Vente marquée payée")}
+                              className="gap-2 text-zinc-300 focus:bg-white/10 focus:text-white"
+                            >
+                              <Ticket className="size-3.5" /> Marquer payée
+                            </DropdownMenuItem>
+                          )}
+                          {(t.status ?? "paye") !== "rembourse" && (
+                            <DropdownMenuItem
+                              onClick={() => patchTicket(t, "rembourse", "Vente remboursée")}
+                              className="gap-2 text-zinc-300 focus:bg-white/10 focus:text-white"
+                            >
+                              <Undo2 className="size-3.5" /> Rembourser
+                            </DropdownMenuItem>
+                          )}
+                          {(t.status ?? "paye") !== "annule" && (
+                            <DropdownMenuItem
+                              onClick={() => patchTicket(t, "annule", "Vente annulée")}
+                              className="gap-2 text-zinc-400 focus:bg-white/10 focus:text-white"
+                            >
+                              <CircleAlert className="size-3.5" /> Annuler la vente
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuSeparator className="bg-white/10" />
+                          <DropdownMenuItem
+                            onClick={() => setConfirmDelete(t)}
+                            className="gap-2 text-red-400 focus:bg-red-950/60 focus:text-red-300"
+                          >
+                            <Trash2 className="size-3.5" /> Supprimer…
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -214,6 +360,37 @@ export function TicketsManager() {
           </div>
         )}
       </div>
+
+      {/* Confirmation de suppression */}
+      {confirmDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
+          <div className="glass-strong w-full max-w-md rounded-2xl border border-white/10 p-6">
+            <h4 className="flex items-center gap-2 text-base font-bold text-white">
+              <CircleAlert className="size-5 text-red-500" /> Supprimer cette vente ?
+            </h4>
+            <p className="mt-3 text-sm leading-relaxed text-zinc-400">
+              {confirmDelete.buyerName} — {confirmDelete.eventName} (
+              {formatCFA(confirmDelete.amount)}). Cette action est définitive ;
+              préférez « Annuler » ou « Rembourser » pour garder la trace.
+            </p>
+            <div className="mt-5 flex justify-end gap-2">
+              <Button
+                variant="outline"
+                className="rounded-lg"
+                onClick={() => setConfirmDelete(null)}
+              >
+                Retour
+              </Button>
+              <Button
+                onClick={() => removeTicket(confirmDelete)}
+                className="gap-2 rounded-lg bg-red-600 text-white hover:bg-red-500"
+              >
+                <Trash2 className="size-4" /> Supprimer définitivement
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

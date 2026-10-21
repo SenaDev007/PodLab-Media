@@ -4,12 +4,14 @@ import { useCallback, useEffect, useState } from "react";
 import {
   Activity,
   BarChart3,
+  CircleAlert,
   Globe2,
   Laptop,
   Loader2,
   MonitorSmartphone,
   MousePointerClick,
   RefreshCw,
+  RotateCcw,
   Smartphone,
   Tablet,
   Target,
@@ -113,17 +115,18 @@ export function AnalyticsPanel() {
   const [data, setData] = useState<AnalyticsPayload>(EMPTY);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [loadError, setLoadError] = useState(false);
 
   const load = useCallback(async (withSpin = false) => {
     if (withSpin) setRefreshing(true);
+    setLoadError(false);
     try {
       const res = await fetch("/api/analytics");
-      if (res.ok) {
-        const d = await res.json();
-        setData(d);
-      }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const d = await res.json();
+      setData(d);
     } catch {
-      // silencieux
+      setLoadError(true);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -141,6 +144,27 @@ export function AnalyticsPanel() {
     return (
       <div className="flex items-center justify-center gap-3 rounded-2xl border border-white/10 bg-zinc-950/80 py-20 text-sm text-zinc-400">
         <Loader2 className="size-4 animate-spin" /> Chargement des analytics…
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-red-500/50 bg-red-950/40 py-16 text-center backdrop-blur">
+        <CircleAlert className="size-10 text-red-500" />
+        <div>
+          <p className="text-sm font-bold text-red-400">Analytics indisponible</p>
+          <p className="mx-auto mt-2 max-w-sm text-xs leading-relaxed text-zinc-400">
+            Le serveur n&apos;a pas répondu — il est peut-être en cours de
+            redémarrage. Relancez le chargement des données d&apos;audience.
+          </p>
+        </div>
+        <button
+          onClick={() => load(true)}
+          className="inline-flex items-center gap-2 rounded-xl border border-white/20 px-4 py-2.5 text-xs font-bold text-white transition-colors hover:bg-white/10"
+        >
+          <RotateCcw className="size-3.5" /> Réessayer
+        </button>
       </div>
     );
   }

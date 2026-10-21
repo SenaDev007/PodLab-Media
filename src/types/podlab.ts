@@ -145,6 +145,7 @@ export interface TicketPurchase {
   buyerName: string;
   email: string;
   amount: number;
+  status: string;
   createdAt: string;
 }
 

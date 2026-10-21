@@ -149,3 +149,25 @@ Stage Summary:
 - La connexion back-office ne peut plus échouer à cause d'une panne BDD (fallback identifiants) et toute erreur serveur est désormais tracée dans dev.log.
 - Toutes les erreurs du site (formulaires publics, back-office, login) s'affichent en ROUGE frappant avec icône et halo ; les avertissements de brouillon non publié sont en ambre ; les succès restent monochromes.
 - Prêt pour commit + push GitHub.
+
+---
+Task ID: 8
+Agent: Z.ai (agent principal)
+Task: Back-office opérationnel de bout en bout — corriger tous les onglets signalés (analytics, CRM, CMS, fiches, planning, billetterie, audience, chiffres clés)
+
+Work Log:
+- Diagnostic navigateur : les pannes « rien ne fonctionne » venaient (a) d'échecs de chargement avalés silencieusement et (b) de fonctionnalités réellement absentes (aucun CRUD planning/billetterie, cartes CRM non cliquables, CMS non persistant). API testées une à une : toutes opérationnelles quand le serveur est actif.
+- Résilience visuelle : chaque onglet affiche désormais une erreur ROUGE explicite + bouton « Réessayer » quand un chargement échoue (analytics, CRM, planning, billetterie, audience, CMS, fiches & documents) — plus aucun retour silencieux au message « sélectionnez un épisode » ; toast destructif rouge sur chaque échec.
+- CRM : cartes cliquables → modale « Fiche lead » complète (société, contact, email, téléphone, budget, statut pipeline, notes, priorité, kit média), création manuelle « Nouveau lead », suppression avec confirmation, drag & drop + flèches conservés. PATCH /api/leads/[id] étendu (édition complète) + DELETE admin.
+- Planning : CRUD complet + workflow — « Nouvelle session » (studio, formule, date, créneau, client, paiement — détection de conflit 409 vérifiée), par session : Confirmer / Clôturer / Annuler / Reprogrammer (date+créneau) / Supprimer (confirmation), filtres par statut (à venir/terminées/annulées) et par ville. Nouvelles routes PATCH/DELETE /api/bookings/[id] (admin) + updateBooking/deleteBooking (store, modes Prisma & mémoire).
+- Billetterie : workflow par vente — Marquer payée / Rembourser / Annuler / Supprimer (confirmation), colonne Statut, KPI recalculés (annulés/refundés exclus). Prisma TicketPurchase.status ajouté, PATCH/DELETE /api/tickets/[id] + updateTicket/deleteTicket.
+- CMS Épisodes : persistance réelle en base (modèle ManagedEpisode : épisodes ajoutés + overrides de statut du catalogue — publie/brouillon/retire, restauration) via GET/PUT/DELETE /api/admin/episodes ; thématiques personnalisées créables en direct dans le modal (AdminSetting cms_custom_themes, /api/admin/themes) ; « Résumé public » et « Transcription SEO » passés en éditeur de texte ENRICHI multi-paragraphes (RichTextEditor contentEditable maison : gras, italique, souligné, titres T1/T2, listes à puces/numérotées, effacer le format — HTML persisté, styles monochromes).
+- Fiches & Documents : les 4 documents (synthèse 5 min, fiche complète, fiche abonnés Business Brief, Kit Média) vérifiés au navigateur — l'éditeur se charge à la sélection dans tous les cas ; échec de chargement → bandeau rouge + Réessayer au lieu du message de sélection.
+- Audience : export CSV vérifié côté backend (route /api/subscribers/export, BOM Excel) + en-tête de marque « PodLab Media — Base audience » ajouté au fichier généré.
+- Chiffres clés : CRUD vérifié au navigateur — édition 1000000→1005000, publication visible immédiatement sur l'API publique, restauration effectuée.
+- Nettoyage QA : lead de test restauré aux valeurs du seed (Bénin Digital Ventures), session QA supprimée, statuts bookings/tickets restaurés, épisode QA supprimé, thématique test retirée, abonnés qa-* purgés.
+- Qualité : tsc 0 erreur src/ · ESLint 0 erreur 0 warning (dialogs refactorisés en init par clé, plus de setState-in-effect) · 6 routes publiques 200 · QA navigateur complète des 8 onglets avec actions réelles.
+
+Stage Summary:
+- Les 8 onglets du back-office sont désormais pleinement opérationnels : chaque module a son CRUD/workflow persistant en base, chaque échec de chargement est visible en rouge avec réessai, et le CMS gère thématiques personnalisées + champs riches multi-paragraphes.
+- Prêt pour commit + push GitHub.

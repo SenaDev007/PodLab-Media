@@ -29,8 +29,12 @@ export async function GET(request: Request) {
         escapeCsv(toIsoDate(s.createdAt)),
       ].join(";")
     );
-    // BOM UTF-8 pour les accents dans Excel
-    const csv = "\uFEFF" + [header, ...rows].join("\r\n");
+    // En-tête de marque + BOM UTF-8 pour les accents dans Excel
+    const brand = [
+      "PodLab Media — Base audience PodLab Business Brief",
+      `Export généré le ${new Date().toLocaleString("fr-FR")} depuis le back-office PodLab (${subscribers.length} contacts)`,
+    ].map((l) => `# ${l}`);
+    const csv = "\uFEFF" + [...brand, header, ...rows].join("\r\n");
 
     const date = new Date().toISOString().slice(0, 10);
     return new Response(csv, {

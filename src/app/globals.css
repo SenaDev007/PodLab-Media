@@ -262,6 +262,45 @@
   animation: waveform 1.15s ease-in-out infinite;
 }
 
+/* Éditeur de texte enrichi back-office — zones contentEditable (CMS) */
+.rich-text-zone h2 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 0.85em 0 0.3em;
+  color: #fff;
+}
+.rich-text-zone h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: 0.7em 0 0.25em;
+  color: #e4e4e7;
+}
+.rich-text-zone p {
+  margin: 0.35em 0;
+}
+.rich-text-zone ul,
+.rich-text-zone ol {
+  margin: 0.45em 0 0.45em 1.2em;
+  padding-left: 0.6em;
+}
+.rich-text-zone ul {
+  list-style: disc;
+}
+.rich-text-zone ol {
+  list-style: decimal;
+}
+.rich-text-zone li {
+  margin: 0.2em 0;
+}
+.rich-text-zone b,
+.rich-text-zone strong {
+  font-weight: 700;
+  color: #fff;
+}
+.rich-text-zone a {
+  text-decoration: underline;
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
    Réseaux sociaux — couleurs officielles des marques au survol des icônes
    (footer). Définies en CSS natif pour une parfaite parité dev/Turbopack et

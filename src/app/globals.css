@@ -261,3 +261,41 @@
   transform-origin: center bottom;
   animation: waveform 1.15s ease-in-out infinite;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Réseaux sociaux — couleurs officielles des marques au survol des icônes
+   (footer). Définies en CSS natif pour une parfaite parité dev/Turbopack et
+   production : YouTube rouge #FF0000, Instagram dégradé officiel
+   #F58529 → #DD2A7D → #8134AF, TikTok ombres cyan #25F4EE / rouge #FE2C55,
+   Facebook bleu #1877F2. Le monochrome strict du site est préservé — les
+   couleurs n'apparaissent qu'au survol explicite d'une icône de marque.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.social-hover-youtube:hover {
+  color: #ff0000;
+  border-color: rgb(255 0 0 / 0.6);
+  box-shadow: 0 0 18px rgb(255 0 0 / 0.35);
+}
+
+.social-hover-instagram:hover {
+  background-image: linear-gradient(
+    to top right,
+    #f58529,
+    #dd2a7d 45%,
+    #8134af
+  );
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 0 18px rgb(221 42 125 / 0.45);
+}
+
+.social-hover-tiktok:hover {
+  color: #ffffff;
+  border-color: rgb(255 255 255 / 0.4);
+  filter: drop-shadow(1.5px 0 0 #25f4ee) drop-shadow(-1.5px 0 0 #fe2c55);
+}
+
+.social-hover-facebook:hover {
+  color: #1877f2;
+  border-color: rgb(24 119 242 / 0.6);
+  box-shadow: 0 0 18px rgb(24 119 242 / 0.4);
+}

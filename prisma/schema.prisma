@@ -87,6 +87,31 @@ model InvitationBooking {
   createdAt DateTime @default(now())
 }
 
+// ─── Fiches PDF — contenu éditorial piloté depuis le back-office ────────────
+// Chaque document distribué sur le site public (fiche de synthèse d'épisode,
+// fiche complète invités/citation/notes, fiche abonnés « PodLab Business
+// Brief », Kit Média annonceurs) est composé ici de fond en comble : sections
+// activables, textes, invités, citations, notes, ordre des blocs, pied de
+// page. Tant qu'aucune fiche n'est enregistrée (ou si elle est dépubliée),
+// la génération publique utilise le contenu par défaut calculé automatiquement
+// à partir du catalogue réel de la chaîne.
+model DocSheet {
+  id          String   @id @default(cuid())
+  docType     String // episode_synthese | episode_complete | business_brief | kit_media
+  scopeKey    String   @default("") // videoId pour les fiches d'épisode ; "" sinon
+  title       String   @default("")
+  subtitle    String   @default("")
+  sections    String   @default("[]") // JSON — sections éditoriales ordonnées
+  showContact Boolean  @default(true)
+  footerNote  String   @default("")
+  published   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([docType, scopeKey])
+  @@map("doc_sheets")
+}
+
 // ─── Paramètres du back-office (identifiants admin surchargeables, etc.) ─────
 model AdminSetting {
   key   String @id

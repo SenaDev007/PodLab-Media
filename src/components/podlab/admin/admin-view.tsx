@@ -8,6 +8,7 @@ import {
   Clapperboard,
   Crown,
   ExternalLink,
+  FileText,
   KanbanSquare,
   Loader2,
   Lock,
@@ -26,6 +27,7 @@ import { AudienceManager } from "./audience-manager";
 import { AnalyticsPanel } from "./analytics-panel";
 import { SiteStatsManager } from "./site-stats-manager";
 import { TicketsManager } from "./tickets-manager";
+import { DocsManager } from "./docs-manager";
 import { formatCFA } from "@/lib/data-mock";
 import type { AdminStats } from "@/types/podlab";
 
@@ -246,7 +248,7 @@ export function AdminView() {
           ))}
         </div>
 
-        {/* Onglets back-office — 7 modules (structure WinAgro) */}
+        {/* Onglets back-office — 8 modules (structure WinAgro) */}
         <div className="mt-8">
           <Tabs defaultValue="analytics" className="w-full">
             <TabsList className="glass h-11 w-full justify-start gap-1 overflow-x-auto rounded-xl p-1">
@@ -254,6 +256,7 @@ export function AdminView() {
                 { value: "analytics", icon: Activity, label: "Analytics" },
                 { value: "crm", icon: KanbanSquare, label: "CRM Sponsoring" },
                 { value: "episodes", icon: Clapperboard, label: "CMS Épisodes" },
+                { value: "documents", icon: FileText, label: "Fiches & Documents" },
                 { value: "planning", icon: CalendarRange, label: "Planning Studios" },
                 { value: "billetterie", icon: Crown, label: "Billetterie & VIP" },
                 { value: "audience", icon: Mail, label: "Audience" },
@@ -277,6 +280,9 @@ export function AdminView() {
             </TabsContent>
             <TabsContent value="episodes" className="mt-5">
               <EpisodesCms />
+            </TabsContent>
+            <TabsContent value="documents" className="mt-5">
+              <DocsManager />
             </TabsContent>
             <TabsContent value="planning" className="mt-5">
               <PlanningManager onChanged={load} />

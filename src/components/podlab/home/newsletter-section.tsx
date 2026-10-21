@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Reveal } from "@/components/podlab/shared";
 import { VIDEOS } from "@/lib/videos";
 import { downloadPdf } from "@/lib/pdf";
+import { downloadBackendPdf } from "@/lib/download";
 import { toast } from "@/hooks/use-toast";
 
 // ─── PodLab Business Brief (newsletter) — copywriting §5 ────────────────────
@@ -88,14 +89,22 @@ export function NewsletterSection() {
       });
       if (!res.ok) throw new Error();
 
-      // Lead magnet : téléchargement immédiat de la Fiche de Synthèse Décideur
-      downloadPdf(buildLeadMagnetPdf(email), "podlab-fiche-decideur.pdf");
+      // Fiche de synthèse reçue par l'abonné : PDF généré par le backend,
+      // entièrement composé depuis le back-office « Fiches & Documents »
+      // (repli client si le backend est indisponible).
+      const delivered = await downloadBackendPdf(
+        `/api/pdf/business-brief?email=${encodeURIComponent(email)}`,
+        "podlab-business-brief.pdf"
+      );
+      if (!delivered) {
+        downloadPdf(buildLeadMagnetPdf(email), "podlab-fiche-decideur.pdf");
+      }
 
       setDone(true);
       toast({
         title: "Bienvenue dans le PodLab Business Brief !",
         description:
-          "Fiche de Synthèse Décideur téléchargée — rendez-vous dimanche 8h00.",
+          "Fiche de synthèse téléchargée — rendez-vous dimanche 8h00.",
       });
     } catch {
       toast({
@@ -179,9 +188,9 @@ export function NewsletterSection() {
                     Bienvenue dans le PodLab Business Brief
                   </p>
                   <p className="text-xs text-zinc-500">
-                    Fiche de Synthèse Décideur téléchargée. Rendez-vous chaque
-                    dimanche à 8h00 — l&apos;analyse arrive avant la sortie
-                    officielle de l&apos;épisode à 13h.
+                    Fiche de synthèse téléchargée. Rendez-vous chaque dimanche à
+                    8h00 — l&apos;analyse arrive avant la sortie officielle de
+                    l&apos;épisode à 13h.
                   </p>
                 </div>
               ) : (

@@ -13,6 +13,7 @@ import {
   FileText,
   ListOrdered,
   Headphones,
+  Loader2,
   Mail,
   Play,
   Quote,
@@ -27,8 +28,17 @@ import { SectionTag } from "@/components/podlab/shared";
 import { PdfCaptureDialog } from "@/components/podlab/player/floating-player";
 import { VIDEO_THEMES, CHANNEL_STATS } from "@/lib/videos";
 import { SOCIALS } from "@/lib/brand";
+import {
+  cleanNotes,
+  synopsisFor,
+  topicsFrom,
+  formatDateFr,
+  formatDurationFr,
+} from "@/lib/episode-content";
+import { downloadBackendPdf } from "@/lib/download";
 import { usePlayerStore } from "@/lib/player-store";
 import { navigate } from "@/lib/router";
+import { toast } from "@/hooks/use-toast";
 import type { PodLabVideo } from "@/types/podlab";
 
 // ─── Fiche d'épisode SEO — cahier des charges §3.1 ────────────────────────────
@@ -36,62 +46,8 @@ import type { PodLabVideo } from "@/types/podlab";
 // citation, notes de l'épisode (description officielle), liens d'écoute
 // et lead magnet PDF contre adresse e-mail.
 
-/** Nettoie la description YouTube : liens, coordonnées, séparateurs. */
-function cleanNotes(raw: string): string {
-  return raw
-    .replace(/https?:\/\/\S+/g, "")
-    .replace(/^\s*(contact|tél|tel|site|suivez[- ]nous|rejoignez|abonnez[- ]vous|cliquez|commandez|réserv)\b.*$/gim, "")
-    .replace(/[_—-]{4,}/g, "")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
-}
-
-/** Les 2-3 premières phrases du synopsis (sans liens). */
-function synopsisFrom(raw: string): string {
-  const clean = raw
-    .replace(/https?:\/\/\S+/g, "")
-    .replace(/\s+/g, " ")
-    .trim();
-  if (clean.length < 40) return "";
-  const sentences = clean.match(/[^.!?…]+[.!?…]*/g) ?? [clean];
-  return sentences.slice(0, 3).join(" ").trim();
-}
-
-/** Thèmes réellement abordés — puces extraites de la description officielle
- *  YouTube publiée par la rédaction (aucun contenu inventé). */
-function topicsFrom(raw: string): string[] {
-  const BULLET = /^[•●▪]\s+|^[\u2714\u2713]\uFE0F?\s+/;
-  const topics: string[] = [];
-  for (const line of raw.split("\n")) {
-    const l = line.trim();
-    if (!BULLET.test(l)) continue;
-    const t = l.replace(BULLET, "").trim();
-    if (t.length < 12 || t.length > 160 || /^https?/i.test(t)) continue;
-    topics.push(t);
-  }
-  return [...new Set(topics)].slice(0, 8);
-}
-
-function formatDate(iso: string): string {
-  try {
-    return new Intl.DateTimeFormat("fr-FR", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    }).format(new Date(`${iso}T12:00:00Z`));
-  } catch {
-    return iso;
-  }
-}
-
-function formatDuration(totalSeconds: number): string {
-  const h = Math.floor(totalSeconds / 3600);
-  const m = Math.floor((totalSeconds % 3600) / 60);
-  const s = totalSeconds % 60;
-  if (h > 0) return m > 0 ? `${h} h ${m} min` : `${h} h`;
-  if (m > 0) return s > 0 ? `${m} min ${s} s` : `${m} min`;
-  return `${s} s`;
-}
+// Les fonctions d'extraction éditoriale (synopsis, notes, chapitres) sont
+// partagées avec le back-office et la génération PDF : src/lib/episode-content.ts
 
 export function EpisodeDetail({
   video,
@@ -102,14 +58,39 @@ export function EpisodeDetail({
 }) {
   const [playing, setPlaying] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [dlComplete, setDlComplete] = useState(false);
   const openPlayer = usePlayerStore((s) => s.open);
 
   const synopsis =
-    synopsisFrom(video.description ?? "") ||
+    synopsisFor(video) ||
     `Nouvel épisode de l'émission « Discussion Informelle » — le podcast business le plus écouté au Bénin et le 2ᵉ d'Afrique de l'Ouest. Une conversation sans filtre, orientée ROI, classée ${VIDEO_THEMES[video.theme]} dans le catalogue PodLab Media.`;
   const notes = video.description ? cleanNotes(video.description) : "";
   const hasLongNotes = notes.length > synopsis.length + 120;
   const topics = topicsFrom(video.description ?? "");
+
+  // Fiche complète PDF — contenu composé depuis le back-office « Fiches & Documents »
+  const downloadCompleteSheet = async () => {
+    setDlComplete(true);
+    try {
+      const ok = await downloadBackendPdf(
+        `/api/pdf/episode-complete?videoId=${encodeURIComponent(video.videoId)}`,
+        `podlab-fiche-complete-${video.videoId}.pdf`
+      );
+      if (ok) {
+        toast({
+          title: "Fiche complète téléchargée",
+          description: "Invités, citation, notes et chapitres — au format PDF.",
+        });
+      } else {
+        toast({
+          title: "Indisponible",
+          description: "La fiche complète est momentanément indisponible.",
+        });
+      }
+    } finally {
+      setDlComplete(false);
+    }
+  };
 
   return (
     <section className="relative pt-28 pb-20 md:pt-36">
@@ -146,13 +127,13 @@ export function EpisodeDetail({
             {video.publishedAt && (
               <span className="flex items-center gap-1.5">
                 <CalendarDays className="size-3.5" />
-                Publié le {formatDate(video.publishedAt)}
+                Publié le {formatDateFr(video.publishedAt)}
               </span>
             )}
             {video.durationSeconds ? (
               <span className="flex items-center gap-1.5">
                 <Clock3 className="size-3.5" />
-                {formatDuration(video.durationSeconds)}
+                {formatDurationFr(video.durationSeconds)}
               </span>
             ) : null}
             {video.views ? (
@@ -295,6 +276,19 @@ export function EpisodeDetail({
                 className="gap-2 rounded-xl font-semibold"
               >
                 <Download className="size-4" /> Fiche de synthèse PDF
+              </Button>
+              <Button
+                variant="outline"
+                onClick={downloadCompleteSheet}
+                disabled={dlComplete}
+                className="gap-2 rounded-xl border-white/20 hover:bg-white/10"
+              >
+                {dlComplete ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <FileText className="size-4" />
+                )}
+                Fiche complète — invités, citation, notes
               </Button>
               <Button
                 variant="outline"
@@ -452,7 +446,7 @@ export function EpisodeDetail({
                     </p>
                     <p className="mt-1.5 text-[10px] text-zinc-500">
                       {VIDEO_THEMES[rel.theme]}
-                      {rel.publishedAt ? ` · ${formatDate(rel.publishedAt)}` : ""}
+                      {rel.publishedAt ? ` · ${formatDateFr(rel.publishedAt)}` : ""}
                     </p>
                   </div>
                 </button>

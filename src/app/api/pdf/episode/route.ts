@@ -4,7 +4,9 @@ import { VIDEOS } from "@/lib/videos";
 
 // ─── GET /api/pdf/episode?videoId=…&email=… ─────────────────────────────────
 // Fiche de synthèse d'épisode générée côté serveur (logo officiel embarqué).
-// `email` optionnel : personnalise le pied de page du document.
+// Le contenu est piloté depuis le back-office « Fiches & Documents » :
+// fiche personnalisée publiée si elle existe, sinon contenu par défaut
+// calculé à partir du catalogue réel. `email` personnalise le pied de page.
 
 export async function GET(req: Request) {
   try {
@@ -34,7 +36,8 @@ export async function GET(req: Request) {
         "Content-Type": "application/pdf",
         "Content-Disposition": `attachment; filename="podlab-fiche-${videoId}.pdf"`,
         "Content-Length": String(bytes.byteLength),
-        "Cache-Control": "public, max-age=3600",
+        // Court : les mises à jour du back-office sont visibles rapidement
+        "Cache-Control": "public, max-age=60",
       },
     });
   } catch (e) {

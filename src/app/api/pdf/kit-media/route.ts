@@ -19,7 +19,7 @@ export async function GET() {
         "Content-Type": "application/pdf",
         "Content-Disposition": 'attachment; filename="podlab-kit-media-2026.pdf"',
         "Content-Length": String(bytes.byteLength),
-        "Cache-Control": "public, max-age=3600",
+        "Cache-Control": "public, max-age=60",
       },
     });
   } catch (e) {

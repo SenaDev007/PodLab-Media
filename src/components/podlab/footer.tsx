@@ -17,11 +17,34 @@ function TikTokIcon({ className }: { className?: string }) {
   );
 }
 
+/** Couleurs officielles des marques — révélées au survol de l'icône
+ *  via les classes CSS natives de globals.css (.social-hover-*) :
+ *  parité garantie entre dev (Turbopack) et production. */
 const SOCIAL_LINKS = [
-  { href: SOCIALS.youtube, label: "PodLab Media sur YouTube (@podlabmedia)", Icon: Youtube },
-  { href: SOCIALS.instagram, label: "PodLab sur Instagram (@podlab.so)", Icon: Instagram },
-  { href: SOCIALS.tiktok, label: "PodLab Media sur TikTok (@podlabmedia)", Icon: TikTokIcon },
-  { href: SOCIALS.facebook, label: "PodLab Media sur Facebook (/podlabmedia)", Icon: Facebook },
+  {
+    href: SOCIALS.youtube,
+    label: "PodLab Media sur YouTube (@podlabmedia)",
+    Icon: Youtube,
+    hoverCls: "social-hover-youtube",
+  },
+  {
+    href: SOCIALS.instagram,
+    label: "PodLab sur Instagram (@podlab.so)",
+    Icon: Instagram,
+    hoverCls: "social-hover-instagram",
+  },
+  {
+    href: SOCIALS.tiktok,
+    label: "PodLab Media sur TikTok (@podlabmedia)",
+    Icon: TikTokIcon,
+    hoverCls: "social-hover-tiktok",
+  },
+  {
+    href: SOCIALS.facebook,
+    label: "PodLab Media sur Facebook (/podlabmedia)",
+    Icon: Facebook,
+    hoverCls: "social-hover-facebook",
+  },
 ];
 
 export function Footer() {
@@ -39,14 +62,15 @@ export function Footer() {
               d&apos;Abidjan.
             </p>
             <div className="mt-5 flex items-center gap-3">
-              {SOCIAL_LINKS.map(({ href, label, Icon }) => (
+              {SOCIAL_LINKS.map(({ href, label, Icon, hoverCls }) => (
                 <a
                   key={href}
                   href={href}
                   target="_blank"
                   rel="noreferrer"
                   aria-label={label}
-                  className="inline-flex size-9 items-center justify-center rounded-lg border border-white/10 bg-zinc-950/80 text-zinc-400 hover:text-white hover:border-white/30 transition-colors"
+                  title={label}
+                  className={`inline-flex size-9 items-center justify-center rounded-lg border border-white/10 bg-zinc-950/80 text-zinc-400 transition-all duration-300 ${hoverCls}`}
                 >
                   <Icon className="size-4" />
                 </a>
@@ -137,24 +161,10 @@ export function Footer() {
           </nav>
         </div>
 
-        <div className="mt-12 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-t border-white/10 pt-6">
+        <div className="mt-12 border-t border-white/10 pt-6">
           <p className="text-xs text-zinc-600">
             © {new Date().getFullYear()} PodLab Media — Tous droits réservés.
           </p>
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-zinc-600">
-            <a href={SOCIALS.youtube} target="_blank" rel="noreferrer" className="hover:text-zinc-300 transition-colors">
-              YouTube {SOCIALS.youtubeHandle}
-            </a>
-            <a href={SOCIALS.instagram} target="_blank" rel="noreferrer" className="hover:text-zinc-300 transition-colors">
-              Instagram {SOCIALS.instagramHandle}
-            </a>
-            <a href={SOCIALS.tiktok} target="_blank" rel="noreferrer" className="hover:text-zinc-300 transition-colors">
-              TikTok {SOCIALS.tiktokHandle}
-            </a>
-            <a href={SOCIALS.facebook} target="_blank" rel="noreferrer" className="hover:text-zinc-300 transition-colors">
-              Facebook {SOCIALS.facebookHandle}
-            </a>
-          </div>
         </div>
       </div>
     </footer>

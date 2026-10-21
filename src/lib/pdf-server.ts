@@ -7,9 +7,13 @@ import {
   rgb,
 } from "pdf-lib";
 import { LOGO_PODLAB_BASE64, LOGO_PODLAB_SIZE } from "@/lib/logo-base64";
-import { highlightsFor } from "@/lib/episode-highlights";
-import { VIDEO_THEMES } from "@/lib/videos";
 import { CONTACT, SOCIALS } from "@/lib/brand";
+import { resolveDocSheet } from "@/lib/doc-sheet-service";
+import {
+  bandFor,
+  type DocSheetData,
+  type SheetSection,
+} from "@/lib/doc-sheets";
 import type { PodLabVideo } from "@/types/podlab";
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -302,6 +306,87 @@ class ProPdf {
     this.y += 4;
   }
 
+  /** Liste numérotée (chapitres) — « 01 » gras + texte avec retrait suspendu. */
+  numberedList(items: string[], kickerRight: string, titleRight: string) {
+    items.forEach((raw, idx) => {
+      const num = `${String(idx + 1).padStart(2, "0")}`;
+      const lines = wrap(raw, this.regular, 9.5, A4.w - 2 * M - 34);
+      this.ensure(lines.length * 13.5 + 6, kickerRight, titleRight);
+      lines.forEach((ln, i) => {
+        if (i === 0) {
+          this.page.drawText(num, {
+            x: M,
+            y: this.y,
+            size: 9.5,
+            font: this.bold,
+            color: INK,
+          });
+        }
+        this.page.drawText(ln, {
+          x: M + 30,
+          y: this.y,
+          size: 9.5,
+          font: this.regular,
+          color: Z800,
+        });
+        this.y -= 13.5;
+      });
+      this.y -= 4;
+    });
+    this.y += 4;
+  }
+
+  /** Bloc citation — encadré à filet, texte oblique + attribution. */
+  quoteBlock(
+    text: string,
+    author: string,
+    kickerRight: string,
+    titleRight: string
+  ) {
+    const size = 11.5;
+    const inner = A4.w - 2 * M - 48;
+    const lines = wrap(`« ${text} »`, this.oblique, size, inner);
+    const h = lines.length * 16 + (author ? 24 : 12) + 22;
+    this.ensure(h + 8, kickerRight, titleRight);
+    this.page.drawRectangle({
+      x: M,
+      y: this.y - h,
+      width: A4.w - 2 * M,
+      height: h,
+      color: PAPER,
+      borderColor: INK,
+      borderWidth: 1,
+    });
+    this.page.drawRectangle({
+      x: M,
+      y: this.y - h,
+      width: 4,
+      height: h,
+      color: INK,
+    });
+    let ly = this.y - 26;
+    for (const ln of lines) {
+      this.page.drawText(ln, {
+        x: M + 24,
+        y: ly,
+        size,
+        font: this.oblique,
+        color: INK,
+      });
+      ly -= 16;
+    }
+    if (author) {
+      this.page.drawText(author.toUpperCase(), {
+        x: M + 24,
+        y: ly + 2,
+        size: 6.5,
+        font: this.bold,
+        color: Z500,
+      });
+    }
+    this.y -= h + 20;
+  }
+
   /** Rangée de 4 encadrés statistiques. */
   statRow(items: StatItem[], kickerRight: string, titleRight: string) {
     const gap = 10;
@@ -521,153 +606,208 @@ class ProPdf {
   }
 }
 
-// ─── Document 1 : Kit Média & Grille Tarifaire (annonceurs) ──────────────────
 
-const KIT = { kicker: "Kit Média 2026", title: "Média & grille tarifaire — annonceurs" } as const;
+// ═══════════════════════════════════════════════════════════════════════════
+// Documents pilotés par le back-office (« Fiches & Documents »)
+//
+// Tout le contenu ci-dessous provient soit d'une fiche personnalisée
+// enregistrée dans le back-office (table DocSheet, publiée), soit du contenu
+// par défaut calculé à partir du catalogue réel (src/lib/doc-sheets.ts).
+// POD'LAB décide de fond en comble de ce qui figure dans chaque document
+// AVANT que la génération ne se fasse au clic du visiteur.
+// ═══════════════════════════════════════════════════════════════════════════
 
-export async function buildKitMediaPdf(): Promise<Uint8Array> {
-  const pdf = await ProPdf.create(KIT.kicker, KIT.title);
+/** Une section a-t-elle réellement du contenu à imprimer ? */
+function sectionHasContent(s: SheetSection): boolean {
+  switch (s.kind) {
+    case "paragraph":
+      return !!(s.text && s.text.trim());
+    case "bullets":
+    case "chapters":
+      return !!(s.items && s.items.filter(Boolean).length);
+    case "quote":
+      return !!(s.quoteText && s.quoteText.trim());
+    case "guests":
+      return !!(s.guests && s.guests.filter((g) => g.name).length);
+    case "stats":
+      return !!(s.stats && s.stats.filter((t) => t.value).length);
+    case "bars":
+      return !!(s.bars && s.bars.filter((b) => b.label).length);
+    case "table":
+      return !!(
+        s.tableHeaders &&
+        s.tableHeaders.length >= 2 &&
+        s.items &&
+        s.items.filter(Boolean).length
+      );
+    case "callout":
+      return !!(s.calloutValue && s.text && s.text.trim());
+    case "contact":
+      return true;
+  }
+}
 
+export interface BuildSheetOptions {
+  email?: string;
+}
+
+/**
+ * Moteur générique : rend une fiche éditoriale (DocSheetData) en PDF A4
+ * professionnel — bandeau noir + logo, sections numérotées activables,
+ * bloc contact optionnel et pied de page personnalisable.
+ */
+export async function buildSheetPdf(
+  band: { kicker: string; title: string },
+  sheet: DocSheetData,
+  opts: BuildSheetOptions = {}
+): Promise<Uint8Array> {
+  const pdf = await ProPdf.create(band.kicker, band.title);
+
+  // Pied de page personnalisé + mention de l'éventuel destinataire
+  const emailNote = opts.email
+    ? `Document généré pour ${opts.email} le ${new Date().toLocaleDateString("fr-FR")}.`
+    : "";
+  pdf.footerNote = [sheet.footerNote, emailNote].filter(Boolean).join(" — ") || undefined;
+
+  // Titre éditorial (repli sur le bandeau si la fiche n'en fournit pas)
   pdf.title(
-    "Le 1er média business d'Afrique francophone.",
-    "128 000 décideurs abonnés · 1 million d'écoutes par trimestre · 894 vidéos publiées · 2 studios 4K Broadcast internationaux"
+    sheet.title.trim() || band.title,
+    sheet.subtitle.trim() || undefined
   );
 
-  pdf.kicker("01", "L'audience PodLab en bref", KIT.kicker, KIT.title);
-  pdf.statRow(
-    [
-      { value: "128 000", label: "décideurs abonnés YouTube" },
-      { value: "1 M+", label: "écoutes par trimestre" },
-      { value: "894", label: "vidéos publiées" },
-      { value: "78 %", label: "cadres, dirigeants & investisseurs" },
-    ],
-    KIT.kicker,
-    KIT.title
-  );
+  const active = sheet.sections.filter((s) => s.enabled && sectionHasContent(s));
+  const hasContactSection = active.some((s) => s.kind === "contact");
+  let n = 0;
+  const num = () => String(++n).padStart(2, "0");
 
-  pdf.kicker("02", "Profil des auditeurs", KIT.kicker, KIT.title);
-  pdf.bars(
-    [
-      { label: "Dirigeants & fondateurs d'entreprise", pct: 34 },
-      { label: "Cadres supérieurs & consultants", pct: 27 },
-      { label: "Investisseurs & professionnels de la finance", pct: 17 },
-      { label: "Créatifs, artistes & créateurs de contenu", pct: 13 },
-      { label: "Étudiants en business & autres curieux", pct: 9 },
-    ],
-    KIT.kicker,
-    KIT.title
-  );
-  pdf.para(
-    "Moyennes internes constatées sur les 12 derniers mois (YouTube Analytics + base newsletter PodLab Business Brief). 14 pays d'écoute : Côte d'Ivoire, Bénin, Sénégal, Togo, Cameroun et France en tête.",
-    { size: 7.5, color: Z500, font: pdf.oblique }
-  );
+  for (const s of active) {
+    const label = s.label.trim();
+    switch (s.kind) {
+      case "paragraph": {
+        pdf.kicker(num(), label || "Paragraphe", band.kicker, band.title);
+        const paragraphs = (s.text ?? "").split(/\n\s*\n/).filter((p) => p.trim());
+        for (const p of paragraphs) pdf.para(p.trim());
+        break;
+      }
+      case "bullets": {
+        pdf.kicker(num(), label || "Points clés", band.kicker, band.title);
+        pdf.bullets((s.items ?? []).filter(Boolean), band.kicker, band.title);
+        break;
+      }
+      case "chapters": {
+        pdf.kicker(num(), label || "Au programme", band.kicker, band.title);
+        pdf.numberedList((s.items ?? []).filter(Boolean), band.kicker, band.title);
+        break;
+      }
+      case "quote": {
+        pdf.kicker(num(), label || "Citation", band.kicker, band.title);
+        pdf.quoteBlock((s.quoteText ?? "").trim(), s.quoteAuthor ?? "", band.kicker, band.title);
+        break;
+      }
+      case "guests": {
+        pdf.kicker(num(), label || "Invités", band.kicker, band.title);
+        const rows = (s.guests ?? [])
+          .filter((g) => g.name)
+          .map((g) => [g.name, g.role || "Invité de l'épisode"]);
+        if (rows.length) {
+          pdf.table(
+            { headers: ["Invité", "Fonction / rôle"], widths: [2.4, 4.6], rows },
+            band.kicker,
+            band.title
+          );
+        }
+        break;
+      }
+      case "stats": {
+        pdf.kicker(num(), label || "Chiffres clés", band.kicker, band.title);
+        const items = (s.stats ?? []).filter((t) => t.value);
+        // 4 encadrés par rangée maximum
+        for (let i = 0; i < items.length; i += 4) {
+          pdf.statRow(items.slice(i, i + 4), band.kicker, band.title);
+        }
+        break;
+      }
+      case "bars": {
+        pdf.kicker(num(), label || "Répartition", band.kicker, band.title);
+        pdf.bars(
+          (s.bars ?? []).filter((b) => b.label).map((b) => ({ label: b.label, pct: b.pct })),
+          band.kicker,
+          band.title
+        );
+        break;
+      }
+      case "table": {
+        pdf.kicker(num(), label || "Tableau", band.kicker, band.title);
+        const headers = s.tableHeaders ?? [];
+        const widths =
+          s.tableWidths && s.tableWidths.length === headers.length
+            ? s.tableWidths
+            : headers.map(() => 1);
+        const rows = (s.items ?? [])
+          .filter(Boolean)
+          .map((r) => {
+            const cells = r.split("|").map((c) => c.trim());
+            // aligne chaque ligne sur le nombre de colonnes du tableau
+            while (cells.length < headers.length) cells.push("");
+            return cells.slice(0, headers.length);
+          });
+        pdf.table({ headers, widths, rows }, band.kicker, band.title);
+        break;
+      }
+      case "callout": {
+        pdf.kicker(num(), label || "À retenir", band.kicker, band.title);
+        pdf.callout(s.calloutValue ?? "", s.text ?? "", band.kicker, band.title);
+        break;
+      }
+      case "contact": {
+        pdf.kicker(num(), label || "Contact", band.kicker, band.title);
+        pdf.contactBlock(band.kicker, band.title);
+        break;
+      }
+    }
+  }
 
-  pdf.kicker("03", "Niveau d'attention — notre actif le plus rare", KIT.kicker, KIT.title);
-  pdf.callout(
-    "62 %",
-    "de taux de complétion moyen des vidéos PodLab — là où les formats interview longs s'arrêtent en général autour de 45 %. Une audience qui écoute jusqu'au bout, donc expose durablement votre marque.",
-    KIT.kicker,
-    KIT.title
-  );
-
-  pdf.kicker("04", "Nos formats pour annonceurs", KIT.kicker, KIT.title);
-  pdf.bullets(
-    [
-      "Mentions orales naturelles intégrées aux épisodes (Finance & Investissement, Success Stories, Entrepreneuriat, Showbiz)",
-      "Intégration produit en plateau 4K + déclinaison extraits Shorts / Reels",
-      "Relais newsletter B2B « PodLab Business Brief » — audience 100 % professionnelle",
-      "Masterclasses & enregistrements publics : speaking, stand, billetterie partenaire",
-      "Épisode dédié « Marque Story » produit en studio clé en main (script, tournage, montage)",
-    ],
-    KIT.kicker,
-    KIT.title
-  );
-
-  pdf.kicker("05", "Grille tarifaire indicative (F CFA)", KIT.kicker, KIT.title);
-  pdf.table(
-    {
-      headers: ["Format", "Contenu", "Tarif"],
-      widths: [2.4, 4.6, 1.7],
-      rows: [
-        ["Mention orale épisode", "60 à 90 secondes intégrées au fil d'un épisode existant", "dès 250 000"],
-        ["Sponsoring Success Stories", "Package 4 épisodes ciblés + relais newsletter", "sur devis"],
-        ["Épisode dédié « Marque Story »", "Interview de marque produite clé en main", "sur devis"],
-        ["Pack studio — Audio Master", "3 h d'enregistrement, ingénieur du son dédié", "75 000"],
-        ["Pack studio — Podcasting Vidéo 4K", "3 caméras 4K, éclairage cinématique, 3 h", "150 000"],
-        ["Pack Production Clé en Main", "Journée complète : tournage + montage + extraits", "350 000"],
-        ["Événements & masterclasses", "Speaking, stand, billetterie partenaire", "sur devis"],
-      ],
-    },
-    KIT.kicker,
-    KIT.title
-  );
-
-  pdf.kicker("06", "Pourquoi PodLab plutôt qu'ailleurs ?", KIT.kicker, KIT.title);
-  pdf.bullets(
-    [
-      "CPM PodLab : 2 500 F CFA pour 1 000 écoutes qualifiées — contre ~10 000 F CFA en équivalent TV / presse, soit 4 fois moins cher.",
-      "2 heures de temps d'attention moyen par épisode : votre message est écouté, pas survolé.",
-      "Un environnement premium : nos plateaux 4K de Cotonou et Abidjan valorisent l'image de votre marque.",
-    ],
-    KIT.kicker,
-    KIT.title
-  );
-
-  pdf.kicker("07", "Travaillons ensemble", KIT.kicker, KIT.title);
-  pdf.contactBlock(KIT.kicker, KIT.title);
-  pdf.para(
-    "Qualifiez votre objectif et débloquez le kit complet en ligne : " +
-      (process.env.NEXT_PUBLIC_SITE_URL ?? "https://podlab-media.vercel.app")
-        .replace(/^https?:\/\//, "")
-        .replace(/\/+$/, "") +
-      "/sponsoring",
-    { size: 8.5, color: Z600 }
-  );
+  // Bloc contact global (sauf si une section contact explicite existe déjà)
+  if (sheet.showContact && !hasContactSection) {
+    pdf.kicker(num(), "Travaillons ensemble", band.kicker, band.title);
+    pdf.contactBlock(band.kicker, band.title);
+  }
 
   return pdf.save();
+}
+
+// ─── Document 1 : Kit Média & Grille Tarifaire (annonceurs) ──────────────────
+
+export async function buildKitMediaPdf(): Promise<Uint8Array> {
+  const sheet = await resolveDocSheet("kit_media", "", null);
+  return buildSheetPdf(bandFor("kit_media", null), sheet);
 }
 
 // ─── Document 2 : Fiche de synthèse d'épisode (captation email) ──────────────
 
 export async function buildEpisodePdf(
   video: PodLabVideo,
-  opts: { email?: string } = {}
+  opts: BuildSheetOptions = {}
 ): Promise<Uint8Array> {
-  const EP = {
-    kicker: "Fiche de synthèse",
-    title: `Discussion Informelle · ${VIDEO_THEMES[video.theme]}`,
-  } as const;
+  const sheet = await resolveDocSheet("episode_synthese", video.videoId, video);
+  return buildSheetPdf(bandFor("episode_synthese", video), sheet, opts);
+}
 
-  const pdf = await ProPdf.create(EP.kicker, EP.title);
-  pdf.footerNote = opts.email
-    ? `Fiche générée pour ${opts.email} le ${new Date().toLocaleDateString("fr-FR")} — les prochaines synthèses arriveront par email.`
-    : undefined;
+// ─── Document 3 : Fiche complète d'épisode (invités, citation, notes) ────────
 
-  pdf.title(video.title, `Émission « Discussion Informelle » · Chaîne officielle PodLab ${SOCIALS.youtubeHandle}`);
+export async function buildEpisodeCompletePdf(
+  video: PodLabVideo,
+  opts: BuildSheetOptions = {}
+): Promise<Uint8Array> {
+  const sheet = await resolveDocSheet("episode_complete", video.videoId, video);
+  return buildSheetPdf(bandFor("episode_complete", video), sheet, opts);
+}
 
-  pdf.kicker("01", "L'essentiel de cet épisode", EP.kicker, EP.title);
-  pdf.bullets(highlightsFor(video.theme), EP.kicker, EP.title);
+// ─── Document 4 : Fiche abonnés « PodLab Business Brief » ─────────────────────
 
-  pdf.kicker("02", "Comment utiliser cette fiche", EP.kicker, EP.title);
-  pdf.para(
-    "Lisez-la en 5 minutes avant votre réunion, votre investissement ou votre prise de décision. Repérez les leçons directement transposables à votre contexte, puis approfondissez en regardant l'épisode complet — les passages clés y sont cités."
-  );
-  pdf.para(
-    `Épisode complet : ${video.youtubeUrl}`,
-    { size: 8.5, color: Z600 }
-  );
-
-  pdf.kicker("03", "Aller plus loin avec PodLab", EP.kicker, EP.title);
-  pdf.bullets(
-    [
-      "Abonnez-vous au PodLab Business Brief : l'analyse business de chaque épisode, chaque dimanche à 8h.",
-      "Nos studios 4K de Cotonou et Abidjan accueillent vos propres formats — réservation en ligne.",
-      `Suivez-nous : Instagram ${SOCIALS.instagramHandle} · TikTok ${SOCIALS.tiktokHandle} · Facebook ${SOCIALS.facebookHandle}.`,
-    ],
-    EP.kicker,
-    EP.title
-  );
-
-  pdf.contactBlock(EP.kicker, EP.title);
-  return pdf.save();
+export async function buildBusinessBriefPdf(
+  opts: BuildSheetOptions = {}
+): Promise<Uint8Array> {
+  const sheet = await resolveDocSheet("business_brief", "", null);
+  return buildSheetPdf(bandFor("business_brief", null), sheet, opts);
 }

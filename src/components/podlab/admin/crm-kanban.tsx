@@ -73,7 +73,7 @@ export function CrmKanban({ onChanged }: { onChanged?: () => void }) {
         setLeads((list) =>
           list.map((l) => (l.id === leadId ? { ...l, status: lead.status } : l))
         );
-        toast({ title: "Erreur", description: "Mise à jour impossible." });
+        toast({ variant: "destructive", title: "Erreur", description: "Mise à jour impossible." });
       }
     },
     [leads, onChanged]

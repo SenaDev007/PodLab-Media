@@ -70,12 +70,14 @@ export function SiteStatsManager() {
         });
       } else {
         toast({
+          variant: "destructive",
           title: "Erreur",
           description: d.error || "Enregistrement impossible.",
         });
       }
     } catch {
       toast({
+        variant: "destructive",
         title: "Erreur",
         description: "Enregistrement impossible — réessayez.",
       });
@@ -217,7 +219,11 @@ export function SiteStatsManager() {
       </div>
 
       <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-zinc-950/80 px-5 py-4 backdrop-blur">
-        <p className="text-[11px] leading-relaxed text-zinc-500">
+        <p
+          className={`text-[11px] leading-relaxed ${
+            dirty ? "font-semibold text-amber-400" : "text-zinc-500"
+          }`}
+        >
           {dirty
             ? "Modifications non enregistrées — pensez à publier."
             : "Chiffres synchronisés avec la page d'accueil."}

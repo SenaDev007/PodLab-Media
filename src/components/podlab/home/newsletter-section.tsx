@@ -62,6 +62,7 @@ export function NewsletterSection() {
   const submit = async () => {
     if (!email.includes("@")) {
       toast({
+        variant: "destructive",
         title: "Email invalide",
         description: "Renseignez une adresse email valide.",
       });
@@ -69,6 +70,7 @@ export function NewsletterSection() {
     }
     if (!consent) {
       toast({
+        variant: "destructive",
         title: "Consentement requis",
         description: "Cochez la case pour accepter de recevoir le Business Brief.",
       });
@@ -108,6 +110,7 @@ export function NewsletterSection() {
       });
     } catch {
       toast({
+        variant: "destructive",
         title: "Erreur",
         description: "Inscription impossible pour le moment, réessayez.",
       });

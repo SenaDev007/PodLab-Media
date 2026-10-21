@@ -100,7 +100,7 @@ export function StudiosView() {
 
   const submit = async () => {
     if (!clientName || !email.includes("@") || phone.length < 6) {
-      toast({ title: "Formulaire incomplet", description: "Nom, email et téléphone sont requis." });
+      toast({ variant: "destructive", title: "Formulaire incomplet", description: "Nom, email et téléphone sont requis." });
       return;
     }
     setLoading(true);
@@ -135,7 +135,7 @@ export function StudiosView() {
         description: "Un email de confirmation vient de vous être envoyé.",
       });
     } catch {
-      toast({ title: "Erreur", description: "La réservation a échoué, réessayez." });
+      toast({ variant: "destructive", title: "Erreur", description: "La réservation a échoué, réessayez." });
     } finally {
       setLoading(false);
     }

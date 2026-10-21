@@ -72,6 +72,7 @@ function AddEpisodeDialog({
   const submit = () => {
     if (!title || !youtubeUrl.includes("v=")) {
       toast({
+        variant: "destructive",
         title: "Champs manquants",
         description: "Titre et URL YouTube (avec ?v=…) sont requis.",
       });

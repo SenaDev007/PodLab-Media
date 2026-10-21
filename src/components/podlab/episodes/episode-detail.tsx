@@ -83,6 +83,7 @@ export function EpisodeDetail({
         });
       } else {
         toast({
+          variant: "destructive",
           title: "Indisponible",
           description: "La fiche complète est momentanément indisponible.",
         });

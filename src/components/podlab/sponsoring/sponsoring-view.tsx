@@ -72,7 +72,7 @@ function SponsoringTunnel() {
 
   const submit = async () => {
     if (!company || !contactName || !email.includes("@")) {
-      toast({ title: "Formulaire incomplet", description: "Société, contact et email requis." });
+      toast({ variant: "destructive", title: "Formulaire incomplet", description: "Société, contact et email requis." });
       return;
     }
     setLoading(true);
@@ -102,7 +102,7 @@ function SponsoringTunnel() {
         description: data.message,
       });
     } catch {
-      toast({ title: "Erreur", description: "Envoi impossible pour le moment, réessayez." });
+      toast({ variant: "destructive", title: "Erreur", description: "Envoi impossible pour le moment, réessayez." });
     } finally {
       setLoading(false);
     }
@@ -144,7 +144,7 @@ function SponsoringTunnel() {
         description: `Appel de 30 min ${rdvSlot} — votre contact régie : ${CONTACT.phoneDisplay}.`,
       });
     } catch {
-      toast({ title: "Erreur", description: "Impossible de caler le RDV, réessayez." });
+      toast({ variant: "destructive", title: "Erreur", description: "Impossible de caler le RDV, réessayez." });
     } finally {
       setRdvLoading(false);
     }
@@ -441,6 +441,7 @@ function SponsoringTunnel() {
                       onClick={() => {
                         if (!rdvDay) {
                           toast({
+                            variant: "destructive",
                             title: "Choisissez d'abord un jour",
                             description: "Cliquez sur un jour ouvré ci-dessus.",
                           });

@@ -48,7 +48,7 @@ function TicketDialog({
 
   const submit = async () => {
     if (!event || !buyerName || !email.includes("@")) {
-      toast({ title: "Formulaire incomplet", description: "Nom et email requis." });
+      toast({ variant: "destructive", title: "Formulaire incomplet", description: "Nom et email requis." });
       return;
     }
     setLoading(true);
@@ -66,7 +66,7 @@ function TicketDialog({
       });
       const data = await res.json();
       if (!res.ok) {
-        toast({ title: "Réservation impossible", description: data.error });
+        toast({ variant: "destructive", title: "Réservation impossible", description: data.error });
         return;
       }
       setDone(true);
@@ -75,7 +75,7 @@ function TicketDialog({
         description: `${quantity} place(s) — confirmation envoyée à ${email}.`,
       });
     } catch {
-      toast({ title: "Erreur", description: "Achat impossible pour le moment." });
+      toast({ variant: "destructive", title: "Erreur", description: "Achat impossible pour le moment." });
     } finally {
       setLoading(false);
     }

@@ -130,3 +130,22 @@ Stage Summary:
 - Le back-office PodLab est désormais aligné sur l'architecture WinAgro : authentification dédiée avec verrouillage IP, dashboard à 7 modules, analytics d'audience 30 j trackées depuis le site public, chiffres clés éditables connectés en direct au hero public, billetterie & VIP visibles, CRM/planning/audience/CMS conservés, toutes les API sensibles protégées.
 - Connexion back-office ↔ site public effective dans les deux sens : le tracker alimente les analytics (site → admin) et l'éditeur de chiffres clés republie sur le hero (admin → site).
 - Prêt pour commit + push GitHub (main à jour après validation).
+
+---
+Task ID: 7
+Agent: Z.ai (agent principal)
+Task: Connexion back-office « erreur serveur » + messages d'erreur en ROUGE frappant (au lieu du neutre perçu bleu)
+
+Work Log:
+- Diagnostic : serveur dev down à l'ouverture de la session (000) — l'« erreur serveur » vue par l'utilisateur provenait d'une requête de login pendant un arrêt/redémarrage (fetch KO ou 500 avalé). API login retestée : 200/401/307/401 conformes une fois le serveur relancé.
+- Résilience POST /api/admin/login : parsing JSON isolé (400 « Requête invalide » au lieu d'un 500), lecture AdminSetting rendue non fatale (fallback env/défaut si la BDD lève — la panne SQLite ne bloque plus la connexion), console.error de traçage dans dev.log sur toute erreur inattendue, message 500 reformulé « Erreur serveur — réessayez dans un instant. ».
+- Formulaire login : message d'erreur restylé en ROUGE frappant — bordure red-500/60, fond red-950/70, texte red-400 semibold, icône CircleAlert red-500, halo rouge, role="alert" + animation framer-motion ; message fetch KO reformulé « Serveur injoignable — vérifiez la connexion puis réessayez dans un instant. ».
+- Système de toasts (radix) : variant destructive restylé en rouge premium sur fond noir — bordure red-500/60, fond red-950/95, texte red-200, titre red-400 (via toaster.tsx), halo rouge, backdrop-blur ; classe `destructive` conservée pour les sélecteurs group-[.destructive] ; variant default passé en zinc-950/bord white/15 (plus lisible sur noir pur).
+- Script scripts/add_destructive_variant.py : ajout automatique de variant:"destructive" sur les 29 toasts d'erreur du site public et du back-office (episode-detail, invitation, evenements, studios, sponsoring, floating-player, newsletter, docs-manager, episodes-cms, site-stats-manager, crm-kanban) — toasts de succès laissés monochromes.
+- Warnings « modifications non enregistrées » (docs-manager, site-stats-manager) passés en AMBRE (text-amber-400 + AlertTriangle ambre) — distinction sémantique erreur rouge / avertissement ambre.
+- QA : tsc 0 erreur src/ · login OK 200 / mauvais mdp 401 / JSON invalide 400 / /admin protégé 307 · page login 200 · boîte d'erreur vérifiée au navigateur (computed styles rouges confirmés : bordure oklab chroma 0.214 teinte rouge, fond red-950/70, texte red-400) · toast d'erreur vérifié sur la page d'accueil (Email invalide → fond red-950/95, bordure red-500/60, texte red-200) · toast succès « Bienvenue » fonctionnel (abonnement enregistré) · footer inchangé : 4 classes social-hover-* présentes, aucun lien texte réseaux sur la ligne copyright · 7 routes publiques + /admin/login à 200.
+
+Stage Summary:
+- La connexion back-office ne peut plus échouer à cause d'une panne BDD (fallback identifiants) et toute erreur serveur est désormais tracée dans dev.log.
+- Toutes les erreurs du site (formulaires publics, back-office, login) s'affichent en ROUGE frappant avec icône et halo ; les avertissements de brouillon non publié sont en ambre ; les succès restent monochromes.
+- Prêt pour commit + push GitHub.

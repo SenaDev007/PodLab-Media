@@ -29,9 +29,12 @@ const toastVariants = cva(
   {
     variants: {
       variant: {
-        default: "border bg-background text-foreground",
+        default: "border-white/15 bg-zinc-950 text-foreground shadow-black/60",
+        // Erreurs — ROUGE frappant (exigence utilisateur) : fond rouge profond,
+        // bordure et texte rouges, halo lumineux. La classe `destructive` reste
+        // requise pour les sélecteurs group-[.destructive] de ToastClose/Action.
         destructive:
-          "destructive group border-destructive bg-destructive text-destructive-foreground",
+          "destructive group border-red-500/60 bg-red-950/95 text-red-200 shadow-[0_0_32px_rgba(239,68,68,0.32)] backdrop-blur-md",
       },
     },
     defaultVariants: {

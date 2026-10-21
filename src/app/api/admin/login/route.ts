@@ -11,7 +11,10 @@ import {
 
 export const dynamic = "force-dynamic";
 
-/** POST /api/admin/login — authentification back-office (verrouillage IP inclus). */
+/** POST /api/admin/login — authentification back-office (verrouillage IP inclus).
+ *  Résilience : si la lecture des identifiants personnalisés en base échoue
+ *  (BDD redémarrée, verrou SQLite transient…), on retombe sur les valeurs
+ *  d'environnement ou par défaut au lieu de renvoyer un « Erreur serveur ». */
 export async function POST(request: Request) {
   try {
     const ip =
@@ -28,7 +31,16 @@ export async function POST(request: Request) {
       );
     }
 
-    const { email, password } = await request.json();
+    let email: string | undefined;
+    let password: string | undefined;
+    try {
+      ({ email, password } = await request.json());
+    } catch {
+      return NextResponse.json(
+        { success: false, error: "Requête invalide — réessayez." },
+        { status: 400 }
+      );
+    }
     if (!email || !password) {
       return NextResponse.json(
         { success: false, error: "Adresse e-mail et mot de passe requis." },
@@ -36,9 +48,16 @@ export async function POST(request: Request) {
       );
     }
 
+    // Lecture des identifiants : la BDD ne doit jamais bloquer la connexion —
+    // en cas d'échec de lecture, resolveCredentials retombe sur env/défaut.
     const creds = await resolveCredentials(async (key) => {
-      const row = await db.adminSetting.findUnique({ where: { key } });
-      return row?.value ?? null;
+      try {
+        const row = await db.adminSetting.findUnique({ where: { key } });
+        return row?.value ?? null;
+      } catch (dbErr) {
+        console.error("[admin/login] Lecture AdminSetting impossible :", dbErr);
+        return null;
+      }
     });
 
     const ok =
@@ -64,9 +83,10 @@ export async function POST(request: Request) {
       maxAge: 60 * 60 * 24, // 24 h
     });
     return res;
-  } catch {
+  } catch (err) {
+    console.error("[admin/login] Erreur serveur inattendue :", err);
     return NextResponse.json(
-      { success: false, error: "Erreur serveur." },
+      { success: false, error: "Erreur serveur — réessayez dans un instant." },
       { status: 500 }
     );
   }

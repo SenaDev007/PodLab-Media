@@ -42,11 +42,11 @@ export function PdfCaptureDialog({
 
   const submit = async () => {
     if (!video || !email.includes("@")) {
-      toast({ title: "Email invalide", description: "Renseignez une adresse email valide." });
+      toast({ variant: "destructive", title: "Email invalide", description: "Renseignez une adresse email valide." });
       return;
     }
     if (!consent) {
-      toast({ title: "Consentement requis", description: "Cochez la case pour recevoir la fiche et le Business Brief." });
+      toast({ variant: "destructive", title: "Consentement requis", description: "Cochez la case pour recevoir la fiche et le Business Brief." });
       return;
     }
     setLoading(true);
@@ -101,7 +101,7 @@ export function PdfCaptureDialog({
         description: "Vous êtes abonné(e) : les prochaines fiches arriveront par email.",
       });
     } catch {
-      toast({ title: "Erreur", description: "Le téléchargement a échoué, réessayez." });
+      toast({ variant: "destructive", title: "Erreur", description: "Le téléchargement a échoué, réessayez." });
     } finally {
       setLoading(false);
     }
@@ -307,7 +307,7 @@ export function FloatingPlayer() {
         description: `Lien à ${formatTime(t)} — collez-le où vous voulez.`,
       });
     } catch {
-      toast({ title: "Copie impossible", description: url });
+      toast({ variant: "destructive", title: "Copie impossible", description: url });
     }
   };
 

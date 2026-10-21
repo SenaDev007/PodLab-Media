@@ -107,21 +107,22 @@ export function InvitationView() {
   const submit = async () => {
     if (!city || !date || !slot) {
       toast({
+        variant: "destructive",
         title: "Créneau manquant",
         description: "Choisissez votre studio, une date et un créneau.",
       });
       return;
     }
     if (!guestName.trim() || guestName.trim().length < 2) {
-      toast({ title: "Nom requis", description: "Renseignez votre nom complet." });
+      toast({ variant: "destructive", title: "Nom requis", description: "Renseignez votre nom complet." });
       return;
     }
     if (!email.includes("@")) {
-      toast({ title: "Email invalide", description: "Renseignez une adresse email valide." });
+      toast({ variant: "destructive", title: "Email invalide", description: "Renseignez une adresse email valide." });
       return;
     }
     if (phone.trim().length < 6) {
-      toast({ title: "Téléphone requis", description: "Pour vous rappeler sous 24 h." });
+      toast({ variant: "destructive", title: "Téléphone requis", description: "Pour vous rappeler sous 24 h." });
       return;
     }
 
@@ -157,6 +158,7 @@ export function InvitationView() {
       });
     } catch (e) {
       toast({
+        variant: "destructive",
         title: "Erreur",
         description: e instanceof Error ? e.message : "Réessayez dans un instant.",
       });

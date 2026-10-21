@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Eye, EyeOff, Loader2, Lock } from "lucide-react";
+import { ArrowLeft, CircleAlert, Eye, EyeOff, Loader2, Lock } from "lucide-react";
 
 /**
  * Formulaire de connexion au back-office PodLab — même architecture que
@@ -33,7 +33,9 @@ export function LoginForm() {
       }
       setError(data.error || "Identifiants incorrects.");
     } catch {
-      setError("Une erreur est survenue lors de la connexion.");
+      setError(
+        "Serveur injoignable — vérifiez la connexion puis réessayez dans un instant."
+      );
     } finally {
       setLoading(false);
     }
@@ -122,9 +124,16 @@ export function LoginForm() {
           </div>
 
           {error && (
-            <p className="rounded-xl border border-white/10 bg-zinc-900/80 px-4 py-3 text-xs leading-relaxed text-zinc-300">
-              {error}
-            </p>
+            <motion.p
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.25 }}
+              role="alert"
+              className="flex items-start gap-2.5 rounded-xl border border-red-500/60 bg-red-950/70 px-4 py-3 text-xs font-semibold leading-relaxed text-red-400 shadow-[0_0_28px_rgba(239,68,68,0.22)] backdrop-blur-sm"
+            >
+              <CircleAlert className="mt-0.5 size-4 shrink-0 text-red-500" />
+              <span>{error}</span>
+            </motion.p>
           )}
 
           <button

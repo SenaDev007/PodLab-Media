@@ -526,10 +526,10 @@ export function DocsManager() {
             : "Fiche enregistrée en brouillon — le site public utilise encore les valeurs par défaut.",
         });
       } else {
-        toast({ title: "Erreur", description: d.error || "Enregistrement impossible." });
+        toast({ variant: "destructive", title: "Erreur", description: d.error || "Enregistrement impossible." });
       }
     } catch {
-      toast({ title: "Erreur", description: "Enregistrement impossible — réessayez." });
+      toast({ variant: "destructive", title: "Erreur", description: "Enregistrement impossible — réessayez." });
     } finally {
       setSaving(false);
     }
@@ -587,7 +587,7 @@ export function DocsManager() {
       }
       setTimeout(() => URL.revokeObjectURL(url), 8000);
     } catch {
-      toast({ title: "Erreur", description: "Aperçu impossible — réessayez." });
+      toast({ variant: "destructive", title: "Erreur", description: "Aperçu impossible — réessayez." });
     } finally {
       setPreviewing(false);
     }
@@ -959,10 +959,14 @@ export function DocsManager() {
 
               {/* Barre d'enregistrement */}
               <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-zinc-950/80 px-5 py-4 backdrop-blur">
-                <p className="flex items-center gap-2 text-[11px] leading-relaxed text-zinc-500">
+                <p
+                  className={`flex items-center gap-2 text-[11px] leading-relaxed ${
+                    dirty ? "font-semibold text-amber-400" : "text-zinc-500"
+                  }`}
+                >
                   {dirty ? (
                     <>
-                      <AlertTriangle className="size-3.5 shrink-0 text-zinc-300" />
+                      <AlertTriangle className="size-3.5 shrink-0 text-amber-400" />
                       Modifications non enregistrées — la génération publique
                       utilisera la dernière version publiée.
                     </>
